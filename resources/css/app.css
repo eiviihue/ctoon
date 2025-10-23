@@ -105,6 +105,147 @@ a:hover {
 }
 
 @layer components {
+    /* Responsive Container */
+    .container-fluid {
+        width: 100%;
+        padding-right: 1rem;
+        padding-left: 1rem;
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    @media (min-width: 640px) {
+        .container-fluid {
+            padding-right: 2rem;
+            padding-left: 2rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .container-fluid {
+            padding-right: 4rem;
+            padding-left: 4rem;
+        }
+    }
+
+    /* Comic Grid Responsive */
+    .comic-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    @media (min-width: 640px) {
+        .comic-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .comic-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .comic-grid {
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2rem;
+            padding: 2rem;
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .comic-grid {
+            grid-template-columns: repeat(6, 1fr);
+        }
+    }
+
+    /* Comic Card Responsive */
+    .comic-card {
+        background: var(--card-background);
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .comic-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .comic-card__cover {
+        position: relative;
+        padding-bottom: 140%; /* 1.4:1 Aspect Ratio */
+        overflow: hidden;
+    }
+
+    .comic-card__cover img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .comic-card:hover .comic-card__cover img {
+        transform: scale(1.05);
+    }
+
+    .comic-card__info {
+        padding: 1rem;
+    }
+
+    /* Reader Layout */
+    .reader-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .reader-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    @media (min-width: 640px) {
+        .reader-content {
+            padding: 2rem;
+        }
+    }
+
+    .reader-image {
+        max-width: 100%;
+        max-height: calc(100vh - 8rem);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        margin: 0 auto;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Navigation */
+    .nav-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        background: var(--card-background);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
     .btn {
         padding: 0.625rem 1.25rem;
         border-radius: 0.5rem;
