@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/rating.css') }}">
     <!-- Bootstrap JavaScript Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="{{ asset('js/bookmark.js') }}" defer></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">

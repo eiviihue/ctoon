@@ -17,7 +17,7 @@
                 </div>
                 
                 @auth
-                    <form action="{{ route('bookmarks.toggle', $comic) }}" method="POST" class="mt-3">
+                    <form action="{{ auth()->user()->bookmarks()->where('comic_id', $comic->id)->exists() ? route('bookmarks.destroy', $comic) : route('bookmarks.store', $comic) }}" method="POST" class="mt-3">
                         @csrf
                         <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2">
                             <i class="fas fa-bookmark"></i>

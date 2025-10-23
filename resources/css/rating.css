@@ -1,4 +1,40 @@
 /* Comic Book Rating System */
+/* Mini Rating System */
+.mini-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    font-size: 0.75rem;
+}
+
+.mini-stars {
+    display: flex;
+    gap: 0.15rem;
+}
+
+.mini-star {
+    color: #ffc107;
+    font-size: 0.75rem;
+}
+
+.mini-rating-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #6c757d;
+}
+
+.mini-average {
+    font-weight: 600;
+}
+
+.mini-count {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+/* Original Rating Container */
 .rating-container {
     display: flex;
     align-items: center;

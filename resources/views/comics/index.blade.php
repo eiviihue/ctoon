@@ -16,6 +16,9 @@
               </div>
             @endif
           </a>
+          <div class="px-2">
+            <x-rating :comic="$comic" />
+          </div>
           <div class="card-body">
             <h5 class="card-title">
               <a href="{{ route('comics.show', $comic) }}" class="text-dark text-decoration-none">{{ $comic->title }}</a>
@@ -23,9 +26,6 @@
             <p class="card-text">
               <span class="badge bg-secondary">{{ $comic->genre->name ?? 'Uncategorized' }}</span>
             </p>
-            <div class="mt-2">
-              <x-rating :comic="$comic" size="sm" />
-            </div>
           </div>
         </div>
       </div>

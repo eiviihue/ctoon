@@ -33,7 +33,7 @@
                                     {{ $bookmark->comic->genre->name ?? 'Uncategorized' }}
                                 </span>
                             </p>
-                            <form action="{{ route('bookmarks.toggle', $bookmark->comic) }}" method="POST">
+                            <form action="{{ route('bookmarks.destroy', $bookmark->comic) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-danger w-100">
                                     <i class="fas fa-bookmark me-2"></i>
