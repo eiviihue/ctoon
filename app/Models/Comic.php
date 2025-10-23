@@ -85,7 +85,29 @@ class Comic extends Model
         $storageAccount = env('AZURE_STORAGE_ACCOUNT') ?: env('AZURE_STORAGE_NAME');
         $container = env('AZURE_STORAGE_CONTAINER', env('AZURE_STORAGE_CONTAINER_NAME', null));
         if (!empty($storageAccount) && !empty($container)) {
-            return "https://{$storageAccount}.blob.core.windows.net/{$container}/" . ltrim($this->cover_path, '/');
+            // Normalize path to use covers/{slug}/{filename}
+            $path = ltrim($this->cover_path, '/');
+            // If stored path has images/covers/ prefix, convert to covers/
+            if (str_starts_with($path, 'images/covers/')) {
+                $path = substr($path, strlen('images/'));
+            }
+            // If stored path starts with 'covers/' that's fine. Otherwise if it contains '/covers/' use the suffix.
+            if (!str_starts_with($path, 'covers/')) {
+                // try to find covers/ in the path
+                $pos = strpos($path, '/covers/');
+                if ($pos !== false) {
+                    $path = substr($path, $pos + 1);
+                }
+            }
+
+            $baseUrl = "https://{$storageAccount}.blob.core.windows.net/{$container}/" . $path;
+            $sas = env('AZURE_STORAGE_SAS_TOKEN');
+            if (!empty($sas)) {
+                // ensure token doesn't start with ?
+                $sas = ltrim($sas, '?');
+                return $baseUrl . '?' . $sas;
+            }
+            return $baseUrl;
         }
 
         // Try disk config url
