@@ -33,45 +33,26 @@ class SyncFromAzureStorage extends Command
 
         $defaultGenre = Genre::firstOrCreate(['slug' => 'uncategorized'], ['name' => 'Uncategorized']);
 
-        if (!$isDryRun) {
-            if ($this->confirm('This will DELETE all comics, chapters, pages, covers and genres and re-import. Proceed?')) {
-                DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-                if (DB::getSchemaBuilder()->hasTable('covers')) {
-                    DB::table('covers')->truncate();
-                }
-                Page::truncate();
-                Chapter::truncate();
-                Comic::truncate();
-                Genre::truncate();
-                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-                $this->info('Cleared existing data.');
-                $defaultGenre = Genre::firstOrCreate(['slug' => 'uncategorized'], ['name' => 'Uncategorized']);
-            } else {
-                $this->info('Operation cancelled.');
-                return 1;
-            }
-        }
-
         foreach ($comicDirs as $comicPath) {
             $comicSlug = basename($comicPath);
             $this->info("\nProcessing comic: {$comicSlug}");
 
             $title = Str::title(str_replace('-', ' ', $comicSlug));
 
-            if (!$isDryRun) {
-                $comic = Comic::create([
-                    'title' => $title,
-                    'slug' => $comicSlug,
-                    'genre_id' => $defaultGenre->id,
-                ]);
+            // Find or create comic
+            $comic = Comic::firstOrNew(['slug' => $comicSlug]);
+            if ($comic->exists) {
+                $this->info("Found existing comic: {$comic->title} (slug: {$comic->slug})");
             } else {
-                $comic = new Comic();
-                $comic->id = $comicDirs->search($comicPath) + 1;
-                $comic->slug = $comicSlug;
-                $comic->title = $title;
+                if (!$isDryRun) {
+                    $comic->fill([
+                        'title' => $title,
+                        'slug' => $comicSlug,
+                        'genre_id' => $defaultGenre->id,
+                    ])->save();
+                    $this->info("Created new comic: {$title} (slug: {$comicSlug})");
+                }
             }
-
-            $this->info(($isDryRun ? '[DRY] ' : '') . "Comic: {$comic->title} (slug: {$comic->slug})");
 
             // Cover handling
             $coverDir = "covers/{$comicSlug}";
@@ -85,24 +66,35 @@ class SyncFromAzureStorage extends Command
                     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
                     if (in_array($ext, $validExt)) {
                         $coverPath = "covers/{$comicSlug}/{$filename}";
-                        if (!$isDryRun) {
-                            if (DB::getSchemaBuilder()->hasTable('covers')) {
-                                DB::table('covers')->insert([
-                                    'id' => $comic->id,
-                                    'comic_id' => $comic->id,
-                                    'path' => $coverPath,
-                                    'filename' => $filename,
-                                    'size' => null,
-                                    'disk' => config('filesystems.default', 'azure'),
-                                    'is_primary' => true,
-                                    'created_at' => Carbon::now(),
-                                    'updated_at' => Carbon::now(),
-                                ]);
+                        
+                        // Check if cover path has changed
+                        if ($comic->cover_path !== $coverPath) {
+                            if (!$isDryRun) {
+                                if (DB::getSchemaBuilder()->hasTable('covers')) {
+                                    // Update or insert cover
+                                    DB::table('covers')->updateOrInsert(
+                                        ['comic_id' => $comic->id],
+                                        [
+                                            'id' => $comic->id,
+                                            'path' => $coverPath,
+                                            'filename' => $filename,
+                                            'size' => null,
+                                            'disk' => config('filesystems.default', 'azure'),
+                                            'is_primary' => true,
+                                            'updated_at' => Carbon::now(),
+                                        ]
+                                    );
+                                }
+                                $comic->update(['cover_path' => $coverPath]);
+                                $this->info("Updated cover path for {$comic->title}: {$coverPath}");
+                            } else {
+                                $this->info("[DRY] Would update cover path for {$comic->title}: {$coverPath}");
                             }
-                            $comic->update(['cover_path' => $coverPath]);
+                        } else {
+                            $this->info("Cover path unchanged for {$comic->title}");
                         }
+                        
                         $coverFound = true;
-                        $this->info(($isDryRun ? '[DRY] ' : '') . "Cover: {$coverPath}");
                         break;
                     }
                 }
@@ -129,20 +121,21 @@ class SyncFromAzureStorage extends Command
                     continue;
                 }
 
-                if (!$isDryRun) {
-                    $chapter = Chapter::create([
-                        'comic_id' => $comic->id,
-                        'number' => (int) $chapterNumber,
+                // Find or create chapter
+                $chapter = Chapter::firstOrNew([
+                    'comic_id' => $comic->id,
+                    'number' => (int) $chapterNumber
+                ]);
+
+                if ($chapter->exists) {
+                    $this->info("Found existing chapter {$chapterNumber} for {$comic->title}");
+                } else if (!$isDryRun) {
+                    $chapter->fill([
                         'title' => "Chapter {$chapterNumber}",
                         'published_at' => now(),
-                    ]);
-                } else {
-                    $chapter = new Chapter();
-                    $chapter->id = 0;
-                    $chapter->number = $chapterNumber;
+                    ])->save();
+                    $this->info("Created new chapter {$chapterNumber} for {$comic->title}");
                 }
-
-                $this->info(($isDryRun ? '[DRY] ' : '') . "Chapter: {$chapterNumber}");
 
                 // Pages: support filenames like page1.jpg, page_01.jpg, 1.jpg, 001.jpg
                 $pageFiles = collect($disk->files($chapterDir))->filter(function ($f) {
@@ -177,15 +170,24 @@ class SyncFromAzureStorage extends Command
                     $ext = strtolower(pathinfo($pf, PATHINFO_EXTENSION)) ?: 'jpg';
                     $relativePagePath = "comics/{$comicSlug}/chapter{$chapterNumber}/{$pageNumber}.{$ext}";
 
-                    if (!$isDryRun) {
-                        $page = Page::create([
-                            'chapter_id' => $chapter->id,
-                            'page_number' => (int) $pageNumber,
-                            'image_path' => $relativePagePath,
-                        ]);
-                    }
+                    // Find or create page
+                    $page = Page::firstOrNew([
+                        'chapter_id' => $chapter->id,
+                        'page_number' => (int) $pageNumber
+                    ]);
 
-                    $this->info(($isDryRun ? '[DRY] ' : '') . "Page: {$pageNumber} => {$relativePagePath}");
+                    // Only update if path has changed
+                    if ($page->image_path !== $relativePagePath) {
+                        if (!$isDryRun) {
+                            $page->image_path = $relativePagePath;
+                            $page->save();
+                            $this->info("Updated page {$pageNumber} path in chapter {$chapterNumber}: {$relativePagePath}");
+                        } else {
+                            $this->info("[DRY] Would update page {$pageNumber} path: {$relativePagePath}");
+                        }
+                    } else {
+                        $this->info("Page {$pageNumber} path unchanged in chapter {$chapterNumber}");
+                    }
                 }
             }
         }
