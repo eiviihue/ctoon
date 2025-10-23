@@ -9,11 +9,9 @@ use Illuminate\Http\JsonResponse;
 
 class RatingController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
+    /**
+     * RatingController constructor.
+     */
     public function store(StoreRatingRequest $request, Comic $comic)
     {
         $userId = auth()->id();
