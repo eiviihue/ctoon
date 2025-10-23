@@ -48,24 +48,26 @@
             @if($comic->chapters->count())
                 <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
                     <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Chapters</h2>
-                    <div class="space-y-2">
+                    <div class="space-y-2 chapter-list">
                         @foreach($comic->chapters->sortByDesc('number') as $chapter)
-                            <a href="{{ route('chapters.show', [$comic, $chapter]) }}" 
-                               class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200 group">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-lg font-medium text-gray-900 dark:text-white group-hover:text-primary">
-                                        Chapter {{ $chapter->number }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $chapter->created_at->format('M d, Y') }}
-                                    </span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-primary" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                            </a>
+                            <div class="chapter-item">
+                                <a href="{{ route('chapters.show', [$comic, $chapter]) }}" 
+                                   class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200 group">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-lg font-medium text-gray-900 dark:text-white group-hover:text-primary">
+                                            Chapter {{ $chapter->number }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                                            {{ $chapter->created_at->format('M d, Y') }}
+                                        </span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-primary" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </a>
+                            </div>
                         @endforeach
                     </div>
                 </div>

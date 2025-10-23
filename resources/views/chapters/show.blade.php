@@ -49,26 +49,116 @@
     </div>
   </div>
 
-  <div id="reader" class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-8">
+  <div id="reader" class="reader-container" data-comic-id="{{ $comic->id }}">
     @php
       $pageUrls = $chapter->pages->map(function($p) { return $p->image_url; })->toArray();
+      $total = count($pageUrls);
     @endphp
-    @if(count($pageUrls))
-      <img id="pageImage" src="{{ $pageUrls[0] }}" alt="Page {{ $chapter->number }}" 
-           class="w-full max-h-[calc(100vh-8rem)] object-contain mx-auto rounded-lg shadow-lg" />
-      
+
+    @if($total)
+      <div class="reader-nav" aria-hidden="true">
+        <button id="prevBtn" class="nav-btn" title="Previous page">‹</button>
+        <button id="nextBtn" class="nav-btn" title="Next page">›</button>
+      </div>
+
+      <div class="reader-content" data-reader-container>
+        <img id="pageImage" data-src="{{ $pageUrls[0] }}" src="{{ $pageUrls[0] }}" alt="Page {{ $chapter->number }}" 
+             class="reader-image mx-auto" />
+      </div>
+
       <div class="fixed bottom-0 inset-x-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex items-center justify-between h-16">
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-              Page <span id="currentPage">1</span> of {{ count($pageUrls) }}
+          <div class="flex items-center justify-between h-16 gap-4">
+            <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+              <button id="fullscreenBtn" class="btn btn-primary" title="Toggle fullscreen">Fullscreen</button>
+              <div>Page <span id="currentPage">1</span> of <span id="totalPages">{{ $total }}</span></div>
             </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-              Click the image or use arrow keys to navigate
+
+            <div class="flex items-center gap-3">
+              <input id="pageInput" type="number" min="1" max="{{ $total }}" value="1" class="input w-20" />
+              <div class="text-sm text-gray-500 dark:text-gray-400">Click image, use arrows or swipe to navigate</div>
             </div>
           </div>
         </div>
       </div>
+
+      <div class="reading-progress" aria-hidden="true">
+        <div id="progressBar" class="reading-progress__bar" style="width:0%"></div>
+      </div>
+
+      <script>
+        (function(){
+          const pages = @json($pageUrls);
+          let index = 0;
+          const img = document.getElementById('pageImage');
+          const currentPageEl = document.getElementById('currentPage');
+          const totalEl = document.getElementById('totalPages');
+          const progressBar = document.getElementById('progressBar');
+          const prevBtn = document.getElementById('prevBtn');
+          const nextBtn = document.getElementById('nextBtn');
+          const fullscreenBtn = document.getElementById('fullscreenBtn');
+          const pageInput = document.getElementById('pageInput');
+
+          function updateUI(){
+            currentPageEl.textContent = index + 1;
+            pageInput.value = index + 1;
+            const progress = ((index + 1) / pages.length) * 100;
+            progressBar.style.width = progress + '%';
+          }
+
+          function preload(i){
+            if (i >=0 && i < pages.length){
+              const p = new Image(); p.src = pages[i];
+            }
+          }
+
+          function show(){
+            if (!pages[index]) return;
+            img.src = pages[index];
+            updateUI();
+            preload(index + 1);
+            preload(index - 1);
+          }
+
+          function nextPage(){ if (index < pages.length - 1) { index++; show(); }}
+          function prevPage(){ if (index > 0) { index--; show(); }}
+
+          if (img){
+            img.addEventListener('click', function(e){
+              const rect = img.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              if (x > rect.width / 2) nextPage(); else prevPage();
+            });
+
+            document.addEventListener('keydown', function(e){
+              if (e.key === 'ArrowRight' || e.key === ' ') nextPage();
+              else if (e.key === 'ArrowLeft') prevPage();
+            });
+
+            // touch
+            let touchStartX = 0;
+            img.addEventListener('touchstart', function(e){ touchStartX = e.touches[0].clientX; });
+            img.addEventListener('touchend', function(e){ const endX = e.changedTouches[0].clientX; const diff = touchStartX - endX; if (Math.abs(diff) > 50) { diff > 0 ? nextPage() : prevPage(); } });
+
+            // nav buttons
+            prevBtn && prevBtn.addEventListener('click', prevPage);
+            nextBtn && nextBtn.addEventListener('click', nextPage);
+
+            // page input
+            pageInput && pageInput.addEventListener('change', function(e){ let v = parseInt(e.target.value) - 1; if (isNaN(v)) v = 0; if (v < 0) v = 0; if (v > pages.length - 1) v = pages.length - 1; index = v; show(); });
+
+            // fullscreen
+            fullscreenBtn && fullscreenBtn.addEventListener('click', function(){
+              const reader = document.getElementById('reader');
+              if (!document.fullscreenElement){ if(reader.requestFullscreen) reader.requestFullscreen(); }
+              else { if(document.exitFullscreen) document.exitFullscreen(); }
+            });
+
+            // initial
+            show();
+          }
+        })();
+      </script>
     @else
       <div class="flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
         <div class="p-8 text-center">
@@ -83,91 +173,4 @@
   </div>
 </div>
 
-<script>
-    (function() {
-      const pages = @json($pageUrls);
-      let index = 0;
-      const img = document.getElementById('pageImage');
-      const currentPageEl = document.getElementById('currentPage');
-
-      function show() {
-        if (!pages[index]) return;
-        img.src = pages[index];
-        currentPageEl.textContent = index + 1;
-        
-        // Preload next and previous images for smoother navigation
-        if (index < pages.length - 1) {
-          const nextImg = new Image();
-          nextImg.src = pages[index + 1];
-        }
-        if (index > 0) {
-          const prevImg = new Image();
-          prevImg.src = pages[index - 1];
-        }
-      }
-
-      function nextPage() {
-        if (index < pages.length - 1) {
-          index++;
-          show();
-        }
-      }
-
-      function prevPage() {
-        if (index > 0) {
-          index--;
-          show();
-        }
-      }
-
-      if (img) {
-        // Click navigation
-        img.addEventListener('click', function(e) {
-          const rect = img.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          if (x > rect.width / 2) {
-            nextPage();
-          } else {
-            prevPage();
-          }
-        });
-
-        // Keyboard navigation
-        document.addEventListener('keydown', function(e) {
-          if (e.key === 'ArrowRight' || e.key === ' ') {
-            nextPage();
-          } else if (e.key === 'ArrowLeft') {
-            prevPage();
-          }
-        });
-
-        // Touch navigation
-        let touchStartX = 0;
-        img.addEventListener('touchstart', function(e) {
-          touchStartX = e.touches[0].clientX;
-        });
-
-        img.addEventListener('touchend', function(e) {
-          const touchEndX = e.changedTouches[0].clientX;
-          const diff = touchStartX - touchEndX;
-
-          if (Math.abs(diff) > 50) { // Minimum swipe distance
-            if (diff > 0) {
-              nextPage(); // Swipe left = next page
-            } else {
-              prevPage(); // Swipe right = previous page
-            }
-          }
-        });
-
-        // Prevent default touch behavior (zooming, scrolling)
-        img.addEventListener('touchmove', function(e) {
-          e.preventDefault();
-        }, { passive: false });
-
-        // Load first image
-        show();
-      }
-    })();
-  </script>
 @endsection
