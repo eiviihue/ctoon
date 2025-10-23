@@ -1,57 +1,79 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="comic-detail">
-    <div style="display: flex; padding: 2rem; gap: 2rem;">
-        <div style="flex-shrink: 0; width: 250px;">
-            @if($comic->cover_path)
-                <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" 
-                     style="width: 100%; height: auto; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            @else
-                <img src="{{ asset('images/placeholder-cover.png') }}" alt="No cover" 
-                     style="width: 100%; height: auto; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            @endif
+<div class="comic-detail bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div class="flex flex-col md:flex-row p-4 md:p-6 lg:p-8 gap-6">
+        <div class="w-full md:w-64 lg:w-80 flex-shrink-0">
+            <div class="relative pt-[140%] rounded-lg overflow-hidden shadow-lg">
+                @if($comic->cover_path)
+                    <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" 
+                         class="absolute inset-0 w-full h-full object-cover">
+                @else
+                    <div class="absolute inset-0 w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                        <span class="text-gray-400 dark:text-gray-500">No cover</span>
+                    </div>
+                @endif
+            </div>
             
             @auth
-                <form action="{{ route('bookmarks.toggle', $comic) }}" method="POST" style="margin-top: 1rem;">
+                <form action="{{ route('bookmarks.toggle', $comic) }}" method="POST" class="mt-4">
                     @csrf
-                    <button type="submit" class="btn" style="width: 100%;">
+                    <button type="submit" class="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition duration-200 shadow-sm hover:shadow flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
+                        </svg>
                         {{ auth()->user()->bookmarks->contains($comic) ? 'Remove Bookmark' : 'Add Bookmark' }}
                     </button>
                 </form>
             @endauth
         </div>
 
-        <div style="flex: 1;">
-            <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">{{ $comic->title }}</h1>
+        <div class="flex-1">
+            <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 text-gray-900 dark:text-white">{{ $comic->title }}</h1>
             
             @if($comic->genre)
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                    <span style="background: var(--gray-100); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; color: var(--gray-600);">
-                        {{ $comic->genre->name }}
-                    </span>
+            <div class="flex flex-wrap gap-2 mb-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
+                    {{ $comic->genre->name }}
+                </span>
             </div>
             @endif
 
-            <p style="color: var(--gray-600); margin-bottom: 2rem;">{{ $comic->description }}</p>
+            <p class="text-gray-600 dark:text-gray-400 mb-8 text-base leading-relaxed">{{ $comic->description }}</p>
 
             @if($comic->chapters->count())
-                <div style="background: var(--gray-100); border-radius: 0.5rem; padding: 1.5rem;">
-                    <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Chapters</h2>
-                    <div style="display: grid; gap: 0.75rem;">
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                    <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Chapters</h2>
+                    <div class="space-y-2">
                         @foreach($comic->chapters->sortByDesc('number') as $chapter)
                             <a href="{{ route('chapters.show', [$comic, $chapter]) }}" 
-                               style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: white; border-radius: 0.375rem; text-decoration: none; color: inherit; transition: all 0.2s;">
-                                <span>Chapter {{ $chapter->number }}</span>
-                                <span style="color: var(--gray-600); font-size: 0.875rem;">{{ $chapter->created_at->format('M d, Y') }}</span>
+                               class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200 group">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-lg font-medium text-gray-900 dark:text-white group-hover:text-primary">
+                                        Chapter {{ $chapter->number }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $chapter->created_at->format('M d, Y') }}
+                                    </span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-primary" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
                             </a>
                         @endforeach
                     </div>
                 </div>
             @else
-                <p style="text-align: center; padding: 2rem; color: var(--gray-600); background: var(--gray-100); border-radius: 0.5rem;">
-                    No chapters available yet.
-                </p>
+                <div class="text-center p-8 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                    <div class="text-gray-500 dark:text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <p class="text-lg font-medium">No chapters available yet.</p>
+                    </div>
+                </div>
             @endif
         </div>
     </div>

@@ -144,19 +144,33 @@ class SyncFromAzureStorage extends Command
 
                 $this->info(($isDryRun ? '[DRY] ' : '') . "Chapter: {$chapterNumber}");
 
-                // Pages
+                // Pages: support filenames like page1.jpg, page_01.jpg, 1.jpg, 001.jpg
                 $pageFiles = collect($disk->files($chapterDir))->filter(function ($f) {
-                    return preg_match('/page(\d+)/i', basename($f));
+                    $base = basename($f);
+                    // possible patterns: page123, page_123, 123, 00123
+                    return preg_match('/(?:page[_-]?)(\d+)/i', $base) || preg_match('/^(\d+)\./', $base);
                 })->sortBy(function ($f) {
-                    preg_match('/page(\d+)/i', basename($f), $mm);
-                    return (int) ($mm[1] ?? 0);
+                    $base = basename($f);
+                    if (preg_match('/(?:page[_-]?)(\d+)/i', $base, $m)) {
+                        return (int) $m[1];
+                    }
+                    if (preg_match('/^(\d+)\./', $base, $m)) {
+                        return (int) $m[1];
+                    }
+                    return 0;
                 });
 
                 foreach ($pageFiles as $pf) {
-                    preg_match('/page(\d+)/i', basename($pf), $mm);
-                    $pageNumber = $mm[1] ?? null;
+                    $base = basename($pf);
+                    $pageNumber = null;
+                    if (preg_match('/(?:page[_-]?)(\d+)/i', $base, $m)) {
+                        $pageNumber = (int) $m[1];
+                    } elseif (preg_match('/^(\d+)\./', $base, $m)) {
+                        $pageNumber = (int) $m[1];
+                    }
+
                     if (!$pageNumber) {
-                        $this->warn('Could not determine page number for: ' . basename($pf));
+                        $this->warn('Could not determine page number for: ' . $base);
                         continue;
                     }
 
