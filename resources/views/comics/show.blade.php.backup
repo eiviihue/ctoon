@@ -1,0 +1,67 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="comic-detail">
+    <div class="comic-header">
+        <div class="comic-cover">
+            @if($comic->cover_path)
+                <img src="{{ asset('storage/' . $comic->cover_path) }}" alt="{{ $comic->title }}">
+            @endif
+        </div>
+        <div class="comic-info-detail">
+            <h1>{{ $comic->title }}</h1>
+            
+            <div class="comic-stats">
+                <div class="stat-item">
+                    <span class="stat-value">{{ $comic->chapters->count() }}</span>
+                    <span class="stat-label">Chapters</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ number_format($comic->averageRating(), 1) }}</span>
+                    <span class="stat-label">Rating</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ $comic->genre ? $comic->genre->name : 'Manga' }}</span>
+                    <span class="stat-label">Genre</span>
+                </div>
+            </div>
++    </div>
++    <div class="flex-1">
++      <h1 class="text-2xl font-bold">{{ $comic->title }}</h1>
++      <div class="text-sm text-gray-600">Genre: {{ $comic->genre->name ?? 'Uncategorized' }}</div>
++      <div class="mt-2">Avg rating: {{ $comic->averageRating() }}</div>
++      <p class="mt-4">{{ $comic->description }}</p>
++
++      <h2 class="mt-6 text-xl font-semibold">Chapters</h2>
++      <ul class="mt-2 space-y-2">
++        @foreach($comic->chapters as $chapter)
++          <li>
++            <a href="{{ route('chapters.show', ['comic' => $comic, 'chapter' => $chapter]) }}" class="text-indigo-600">Chapter {{ $chapter->number }} - {{ $chapter->title }}</a>
++          </li>
++        @endforeach
++      </ul>
++    </div>
++  </div>
++
++  <div class="mt-8">
++    <h3 class="text-lg font-semibold">Comments</h3>
++    @auth
++      <form action="{{ route('comments.store', $comic) }}" method="POST">
++        @csrf
++        <textarea name="body" class="w-full border p-2" rows="3" required></textarea>
++        <button class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded">Post Comment</button>
++      </form>
++    @else
++      <p>Please <a href="{{ route('login') }}" class="text-indigo-600">login</a> to comment.</p>
++    @endauth
++
++    <div class="mt-4 space-y-4">
++      @foreach($comic->comments as $comment)
++        <div class="border p-3 rounded">
++          <div class="text-sm text-gray-600">{{ $comment->user->name ?? 'Anonymous' }} - {{ $comment->created_at->diffForHumans() }}</div>
++          <div class="mt-1">{{ $comment->body }}</div>
++        </div>
++      @endforeach
++    </div>
++  </div>
+@endsection

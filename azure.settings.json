@@ -1,0 +1,12 @@
+[{
+  "name": "PHP_VERSION",
+  "value": "8.2"
+},
+{
+  "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+  "value": "true"
+},
+{
+  "name": "POST_DEPLOYMENT_SCRIPT",
+  "value": "php artisan storage:link; php artisan migrate --force"
+}]
