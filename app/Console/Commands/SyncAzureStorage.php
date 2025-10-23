@@ -120,7 +120,7 @@ class SyncAzureStorage extends Command
                     // Use slug-based paths: comics/{comic-slug}/chapter-{number}/{filename}
                     $comicSlug = isset($comic) && isset($comic->slug) ? $comic->slug : Str::slug($comicTitle);
                     $chapterNumberForPath = isset($chapter) && isset($chapter->number) ? $chapter->number : ($chapterNumber ?? 'unknown');
-                    $azurePath = "comics/{$comicSlug}/chapter-{$chapterNumberForPath}/{$file}";
+                    $azurePath = "comics/{$comicSlug}/chapter{$chapterNumberForPath}/{$file}";
 
                     $this->line("    File: {$localFile} -> {$azurePath}");
 

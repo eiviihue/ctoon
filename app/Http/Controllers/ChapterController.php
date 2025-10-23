@@ -31,7 +31,7 @@ class ChapterController extends Controller
                 $comicSlug = $comic->slug ?? \Illuminate\Support\Str::slug($comic->title);
                 $chapterNumber = $chapter->number ?? $data['number'] ?? ($i + 1);
                 $path = Storage::disk('azure')->putFileAs(
-                    "comics/{$comicSlug}/chapter-{$chapterNumber}",
+                    "comics/{$comicSlug}/chapter{$chapterNumber}",
                     $file,
                     $filename
                 );
