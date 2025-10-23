@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="min-vh-100 d-flex flex-column position-relative">
-  <nav class="navbar navbar-expand-lg navbar-light bg-light bg-opacity-75 fixed-top border-bottom">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light bg-opacity-75 relative-top border-bottom">
     <div class="container">
       <div class="d-flex align-items-center justify-content-between w-100">
         <div>

@@ -9,7 +9,7 @@
         <div class="card h-100" data-category="{{ $comic->genre->slug ?? 'uncategorized' }}">
           <a href="{{ route('comics.show', $comic) }}" class="text-decoration-none">
             @if($comic->cover_path)
-              <img data-src="{{ $comic->cover_url }}" 
+              <img src="{{ $comic->cover_url }}" 
                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 4'%3E%3C/svg%3E"
                    alt="{{ $comic->title }}" 
                    class="card-img-top lazy"
