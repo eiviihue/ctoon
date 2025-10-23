@@ -1,21 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen flex flex-col">
-  <div class="fixed top-0 inset-x-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <div class="flex items-center gap-4">
+<div class="min-vh-100 d-flex flex-column position-relative">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light bg-opacity-75 fixed-top border-bottom">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between w-100">
+        <div>
           <a href="{{ route('comics.show', $comic) }}" 
-             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-            </svg>
+             class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+            <i class="fas fa-arrow-left"></i>
             Comic Info
           </a>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="d-flex align-items-center gap-2">
           @php
             $prevChapter = $comic->chapters->where('number', '<', $chapter->number)->sortByDesc('number')->first();
             $nextChapter = $comic->chapters->where('number', '>', $chapter->number)->sortBy('number')->first();
@@ -23,67 +21,69 @@
           
           @if($prevChapter)
             <a href="{{ route('chapters.show', ['comic' => $comic, 'chapter' => $prevChapter]) }}" 
-               class="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-              </svg>
+               class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
+              <i class="fas fa-chevron-left"></i>
               Prev Chapter
             </a>
           @endif
           
-          <span class="px-4 py-2 rounded-lg bg-primary/10 text-primary font-medium">
+          <span class="badge bg-primary fs-6">
             Chapter {{ $chapter->number }}
           </span>
           
           @if($nextChapter)
             <a href="{{ route('chapters.show', ['comic' => $comic, 'chapter' => $nextChapter]) }}" 
-               class="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+               class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
               Next Chapter
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-              </svg>
+              <i class="fas fa-chevron-right"></i>
             </a>
           @endif
         </div>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <div id="reader" class="reader-container" data-comic-id="{{ $comic->id }}">
+  <div id="reader" class="container-fluid mt-5 pt-4" data-comic-id="{{ $comic->id }}">
     @php
       $pageUrls = $chapter->pages->map(function($p) { return $p->image_url; })->toArray();
       $total = count($pageUrls);
     @endphp
 
     @if($total)
-      <div class="reader-nav" aria-hidden="true">
-        <button id="prevBtn" class="nav-btn" title="Previous page">‹</button>
-        <button id="nextBtn" class="nav-btn" title="Next page">›</button>
+      <div class="position-fixed top-50 start-0 end-0 translate-middle-y d-flex justify-content-between px-3" style="z-index: 1000;" aria-hidden="true">
+        <button id="prevBtn" class="btn btn-lg btn-dark bg-opacity-50" title="Previous page">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button id="nextBtn" class="btn btn-lg btn-dark bg-opacity-50" title="Next page">
+          <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
 
-      <div class="reader-content" data-reader-container>
+      <div class="text-center" data-reader-container>
         <img id="pageImage" data-src="{{ $pageUrls[0] }}" src="{{ $pageUrls[0] }}" alt="Page {{ $chapter->number }}" 
-             class="reader-image mx-auto" />
+             class="img-fluid mx-auto" style="max-height: 85vh;" />
       </div>
 
-      <div class="fixed bottom-0 inset-x-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex items-center justify-between h-16 gap-4">
-            <div class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-              <button id="fullscreenBtn" class="btn btn-primary" title="Toggle fullscreen">Fullscreen</button>
-              <div>Page <span id="currentPage">1</span> of <span id="totalPages">{{ $total }}</span></div>
+      <nav class="navbar navbar-light bg-light bg-opacity-75 fixed-bottom border-top">
+        <div class="container">
+          <div class="d-flex align-items-center justify-content-between w-100">
+            <div class="d-flex align-items-center gap-3">
+              <button id="fullscreenBtn" class="btn btn-primary" title="Toggle fullscreen">
+                <i class="fas fa-expand"></i>
+              </button>
+              <div class="small text-muted">Page <span id="currentPage">1</span> of <span id="totalPages">{{ $total }}</span></div>
             </div>
 
-            <div class="flex items-center gap-3">
-              <input id="pageInput" type="number" min="1" max="{{ $total }}" value="1" class="input w-20" />
-              <div class="text-sm text-gray-500 dark:text-gray-400">Click image, use arrows or swipe to navigate</div>
+            <div class="d-flex align-items-center gap-3">
+              <input id="pageInput" type="number" min="1" max="{{ $total }}" value="1" class="form-control form-control-sm" style="width: 80px" />
+              <small class="text-muted">Click image, use arrows or swipe to navigate</small>
             </div>
           </div>
         </div>
-      </div>
+      </nav>
 
-      <div class="reading-progress" aria-hidden="true">
-        <div id="progressBar" class="reading-progress__bar" style="width:0%"></div>
+      <div class="progress fixed-top" style="height: 2px;">
+        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
       </div>
 
       <script>

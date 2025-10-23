@@ -1,113 +1,111 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="comic-detail bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-    <div class="flex flex-col md:flex-row p-4 md:p-6 lg:p-8 gap-6">
-        <div class="w-full md:w-64 lg:w-80 flex-shrink-0">
-            <div class="relative pt-[140%] rounded-lg overflow-hidden shadow-lg">
-                @if($comic->cover_path)
-                    <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" 
-                         class="absolute inset-0 w-full h-full object-cover">
+<div class="card">
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-12 col-md-4 col-lg-3">
+                <div class="position-relative">
+                    @if($comic->cover_path)
+                        <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" 
+                             class="img-fluid rounded">
+                    @else
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 400px;">
+                            <span class="text-muted">No cover</span>
+                        </div>
+                    @endif
+                </div>
+                
+                @auth
+                    <form action="{{ route('bookmarks.toggle', $comic) }}" method="POST" class="mt-3">
+                        @csrf
+                        <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2">
+                            <i class="fas fa-bookmark"></i>
+                            {{ auth()->user()->bookmarks->contains($comic) ? 'Remove Bookmark' : 'Add Bookmark' }}
+                        </button>
+                    </form>
+                @endauth
+            </div>
+
+            <div class="col-12 col-md-8 col-lg-9">
+                <h1 class="display-5 fw-bold mb-3">{{ $comic->title }}</h1>
+                
+                @if($comic->genre)
+                <div class="mb-3">
+                    <span class="badge bg-primary">
+                        {{ $comic->genre->name }}
+                    </span>
+                </div>
+                @endif
+
+                <div class="mb-3">
+                    <x-rating :comic="$comic" size="lg" />
+                </div>
+
+                <p class="lead mb-4">{{ $comic->description }}</p>
+
+                @if($comic->chapters->count())
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="h5 mb-0">Chapters</h2>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            @foreach($comic->chapters->sortByDesc('number') as $chapter)
+                                <a href="{{ route('chapters.show', [$comic, $chapter]) }}" 
+                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">Chapter {{ $chapter->number }}</h6>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <small class="text-muted">
+                                            {{ $chapter->created_at->format('M d, Y') }}
+                                        </small>
+                                        <i class="fas fa-chevron-right text-muted"></i>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
                 @else
-                    <div class="absolute inset-0 w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                        <span class="text-gray-400 dark:text-gray-500">No cover</span>
+                    <div class="card text-center">
+                        <div class="card-body py-5">
+                            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                            <p class="h5 text-muted">No chapters available yet.</p>
+                        </div>
                     </div>
                 @endif
             </div>
+        </div>
+
+        @if($comic->comments->count() || auth()->check())
+        <div class="mt-5 pt-4 border-top">
+            <h2 class="h4 mb-4">Comments</h2>
             
             @auth
-                <form action="{{ route('bookmarks.toggle', $comic) }}" method="POST" class="mt-4">
+                <form action="{{ route('comments.store', $comic) }}" method="POST" class="mb-4">
                     @csrf
-                    <button type="submit" class="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition duration-200 shadow-sm hover:shadow flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
-                        </svg>
-                        {{ auth()->user()->bookmarks->contains($comic) ? 'Remove Bookmark' : 'Add Bookmark' }}
-                    </button>
+                    <div class="mb-3">
+                        <textarea name="content" rows="3" class="form-control" placeholder="Leave a comment..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Post Comment</button>
                 </form>
             @endauth
-        </div>
 
-        <div class="flex-1">
-            <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 text-gray-900 dark:text-white">{{ $comic->title }}</h1>
-            
-            @if($comic->genre)
-            <div class="flex flex-wrap gap-2 mb-4">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
-                    {{ $comic->genre->name }}
-                </span>
-            </div>
-            @endif
-
-            <div class="mb-4">
-                <x-rating :comic="$comic" size="lg" />
-            </div>
-
-            <p class="text-gray-600 dark:text-gray-400 mb-8 text-base leading-relaxed">{{ $comic->description }}</p>
-
-            @if($comic->chapters->count())
-                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
-                    <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Chapters</h2>
-                    <div class="space-y-2 chapter-list">
-                        @foreach($comic->chapters->sortByDesc('number') as $chapter)
-                            <div class="chapter-item">
-                                <a href="{{ route('chapters.show', [$comic, $chapter]) }}" 
-                                   class="flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200 group">
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-lg font-medium text-gray-900 dark:text-white group-hover:text-primary">
-                                            Chapter {{ $chapter->number }}
-                                        </span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ $chapter->created_at->format('M d, Y') }}
-                                        </span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-primary" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </a>
+            <div class="comment-list">
+                @foreach($comic->comments->sortByDesc('created_at') as $comment)
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-bold">{{ $comment->user->name }}</span>
+                                <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
                             </div>
-                        @endforeach
+                            <p class="card-text">{{ $comment->content }}</p>
+                        </div>
                     </div>
-                </div>
-            @else
-                <div class="text-center p-8 bg-gray-50 dark:bg-gray-900 rounded-xl">
-                    <div class="text-gray-500 dark:text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                        <p class="text-lg font-medium">No chapters available yet.</p>
-                    </div>
-                </div>
-            @endif
+                @endforeach
+            </div>
         </div>
+        @endif
     </div>
-
-    @if($comic->comments->count() || auth()->check())
-    <div class="mt-8 border-t border-gray-200 dark:border-gray-800 pt-8">
-        <h2 class="text-xl font-semibold mb-4">Comments</h2>
-        
-        @auth
-            <form action="{{ route('comments.store', $comic) }}" method="POST" class="mb-6">
-                @csrf
-                <textarea name="content" rows="3" placeholder="Leave a comment..." class="input w-full resize-y mb-3"></textarea>
-                <button type="submit" class="btn btn-primary">Post Comment</button>
-            </form>
-        @endauth
-
-        <div class="space-y-4">
-            @foreach($comic->comments->sortByDesc('created_at') as $comment)
-                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                    <div class="flex justify-between mb-2">
-                        <span class="font-medium">{{ $comment->user->name }}</span>
-                        <span class="text-sm text-gray-500">{{ $comment->created_at->diffForHumans() }}</span>
-                    </div>
-                    <p class="text-gray-700 dark:text-gray-300">{{ $comment->content }}</p>
-                </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
 </div>
 @endsection

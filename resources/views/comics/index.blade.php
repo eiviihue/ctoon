@@ -1,34 +1,38 @@
 @extends('layouts.app')
 
 @section('content')
-  <h1 class="text-3xl font-bold mb-6">All Comics</h1>
+  <h1 class="display-4 mb-4">All Comics</h1>
 
-  <div class="comic-grid">
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
     @foreach($comics as $comic)
-      <div class="comic-card" data-category="{{ $comic->genre->slug ?? 'uncategorized' }}">
-        <div class="comic-card__cover">
-          <a href="{{ route('comics.show', $comic) }}" class="block w-full h-full">
+      <div class="col">
+        <div class="card h-100" data-category="{{ $comic->genre->slug ?? 'uncategorized' }}">
+          <a href="{{ route('comics.show', $comic) }}" class="text-decoration-none">
             @if($comic->cover_path)
-              <img data-src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="lazy" loading="lazy">
+              <img data-src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="card-img-top lazy" loading="lazy">
             @else
-              <div class="absolute inset-0 w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                <span class="text-gray-400 dark:text-gray-500">No cover</span>
+              <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <span class="text-muted">No cover</span>
               </div>
             @endif
           </a>
-        </div>
-        <div class="comic-card__info">
-          <h3 class="comic-title"><a href="{{ route('comics.show', $comic) }}">{{ $comic->title }}</a></h3>
-          <p class="text-sm text-gray-400 mt-1">{{ $comic->genre->name ?? 'Uncategorized' }}</p>
-          <div class="mt-3">
-            <x-rating :comic="$comic" size="sm" />
+          <div class="card-body">
+            <h5 class="card-title">
+              <a href="{{ route('comics.show', $comic) }}" class="text-dark text-decoration-none">{{ $comic->title }}</a>
+            </h5>
+            <p class="card-text">
+              <span class="badge bg-secondary">{{ $comic->genre->name ?? 'Uncategorized' }}</span>
+            </p>
+            <div class="mt-2">
+              <x-rating :comic="$comic" size="sm" />
+            </div>
           </div>
         </div>
       </div>
     @endforeach
   </div>
 
-  <div class="mt-6">
+  <div class="mt-4">
     {{ $comics->withQueryString()->links() }}
   </div>
 @endsection
