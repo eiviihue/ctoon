@@ -50,6 +50,20 @@
     @endphp
 
     @if($total)
+      <style>
+        /* Reader layout + side panel */
+        .reader-layout{ display:block; transition: all .25s ease; }
+        .reader-main{ transition: margin-right .25s ease; }
+        .reader-side{ position: fixed; top: 80px; right: 0; width: 360px; bottom: 70px; background: var(--bs-body-bg); border-left: 1px solid rgba(0,0,0,.08); box-shadow: -6px 0 18px rgba(0,0,0,.05); overflow:auto; transform: translateX(100%); transition: transform .25s ease; z-index:1100; padding:16px; }
+        .reader-layout.open .reader-side{ transform: translateX(0); }
+        .reader-layout.open .reader-main{ margin-right: 360px; }
+        .reader-side .star-inputs .fa-star{ cursor:pointer; color:#ddd; }
+        .reader-side .star-inputs .fa-star.selected{ color: #ffc107; }
+        @media (max-width: 992px){ .reader-side{ width: 100%; right:0; left:0; top:64px; bottom:0; } .reader-layout.open .reader-main{ margin-right:0; } }
+      </style>
+
+      <div class="reader-layout" id="readerLayout">
+        <div class="reader-main">
       <div class="position-fixed top-50 start-0 end-0 translate-middle-y d-flex justify-content-between px-3" style="z-index: 1000;" aria-hidden="true">
         <button id="prevBtn" class="btn btn-lg btn-dark bg-opacity-50" title="Previous page">
           <i class="fas fa-chevron-left"></i>
@@ -62,6 +76,81 @@
       <div class="text-center" data-reader-container>
         <img id="pageImage" data-src="{{ $pageUrls[0] }}" src="{{ $pageUrls[0] }}" alt="Page {{ $chapter->number }}" 
              class="img-fluid mx-auto" style="max-height: 85vh;" />
+      </div>
+        </div>
+
+        <aside class="reader-side" id="readerSide" aria-hidden="true">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="mb-0">Comments & Rating</h5>
+            <button id="closePanel" class="btn btn-sm btn-outline-secondary">Close</button>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <div>
+                <strong>Average</strong>
+                <div class="h4 mb-0">{{ number_format($comic->averageRating(), 1) }}</div>
+                <small class="text-muted">{{ $comic->ratings()->count() }} ratings</small>
+              </div>
+              <div class="ms-auto">
+                @auth
+                  <button id="openRate" class="btn btn-sm btn-primary">Give Rating</button>
+                @else
+                  <a href="{{ route('login') }}" class="btn btn-sm btn-outline-primary">Login to rate</a>
+                @endauth
+              </div>
+            </div>
+          </div>
+
+          <div id="rateFormWrap" class="mb-4" style="display:none">
+            @auth
+            <form id="rateForm" action="{{ route('ratings.store', $comic) }}" method="POST">
+              @csrf
+              <input type="hidden" name="chapter_id" value="{{ $chapter->id }}">
+              <div class="star-inputs mb-2">
+                @for($i=1;$i<=5;$i++)
+                  <i class="fa fa-star fa-lg" data-value="{{ $i }}"></i>
+                @endfor
+              </div>
+              <input type="hidden" name="rating" id="ratingValue" value="0">
+              <div class="d-grid">
+                <button class="btn btn-success">Submit Rating</button>
+              </div>
+            </form>
+            @endauth
+          </div>
+
+          <hr>
+
+          <div>
+            <h6>Comments ({{ $chapter->comments()->count() }})</h6>
+            <div id="commentsList" class="mb-3">
+              @foreach($chapter->comments()->with('user')->latest()->get() as $c)
+                <div class="mb-2">
+                  <div class="small text-muted">{{ $c->user->name }} · {{ $c->created_at->diffForHumans() }}</div>
+                  <div>{{ $c->body }}</div>
+                </div>
+              @endforeach
+            </div>
+
+            @auth
+            <form id="commentForm" action="{{ route('comments.store', $comic) }}" method="POST">
+              @csrf
+              <input type="hidden" name="chapter_id" value="{{ $chapter->id }}">
+              <div class="mb-2">
+                <textarea name="body" rows="3" class="form-control" placeholder="Write a comment..."></textarea>
+              </div>
+              <div class="d-grid">
+                <button class="btn btn-primary">Post Comment</button>
+              </div>
+            </form>
+            @else
+              <div class="text-center">
+                <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm">Login to comment</a>
+              </div>
+            @endauth
+          </div>
+        </aside>
       </div>
 
       <nav class="navbar navbar-light bg-light bg-opacity-75 fixed-bottom border-top">

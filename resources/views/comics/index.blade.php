@@ -9,9 +9,13 @@
         <div class="card h-100" data-category="{{ $comic->genre->slug ?? 'uncategorized' }}">
           <a href="{{ route('comics.show', $comic) }}" class="text-decoration-none">
             @if($comic->cover_path)
-              <img data-src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="card-img-top lazy" loading="lazy">
+              <img data-src="{{ $comic->cover_url }}" 
+                   src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 4'%3E%3C/svg%3E"
+                   alt="{{ $comic->title }}" 
+                   class="card-img-top lazy"
+                   onload="this.classList.add('loaded')">
             @else
-              <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+              <div class="card-img-top d-flex align-items-center justify-content-center">
                 <span class="text-muted">No cover</span>
               </div>
             @endif

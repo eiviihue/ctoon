@@ -17,11 +17,17 @@
                 </div>
                 
                 @auth
-                    <form action="{{ auth()->user()->bookmarks()->where('comic_id', $comic->id)->exists() ? route('bookmarks.destroy', $comic) : route('bookmarks.store', $comic) }}" method="POST" class="mt-3">
+                    <form action="{{ auth()->user()->bookmarks()->where('comic_id', $comic->id)->exists() ? route('bookmarks.destroy', $comic) : route('bookmarks.store', $comic) }}" 
+                          method="POST" 
+                          class="mt-3 bookmark-form"
+                          data-comic-id="{{ $comic->id }}">
                         @csrf
-                        <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2">
-                            <i class="fas fa-bookmark"></i>
-                            {{ auth()->user()->bookmarks->contains($comic) ? 'Remove Bookmark' : 'Add Bookmark' }}
+                        @if(auth()->user()->bookmarks()->where('comic_id', $comic->id)->exists())
+                            @method('DELETE')
+                        @endif
+                        <button type="submit" class="btn {{ auth()->user()->bookmarks()->where('comic_id', $comic->id)->exists() ? 'btn-danger' : 'btn-primary' }} w-100 d-flex align-items-center justify-content-center gap-2">
+                            <i class="fas {{ auth()->user()->bookmarks()->where('comic_id', $comic->id)->exists() ? 'fa-bookmark' : 'fa-bookmark' }}"></i>
+                            {{ auth()->user()->bookmarks()->where('comic_id', $comic->id)->exists() ? 'Remove Bookmark' : 'Add Bookmark' }}
                         </button>
                     </form>
                 @endauth

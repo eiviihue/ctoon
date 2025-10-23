@@ -15,15 +15,44 @@ class BookmarkController extends Controller
 
     public function store(Comic $comic)
     {
-        $user = auth()->user();
-        $user->bookmarks()->firstOrCreate(['comic_id' => $comic->id]);
-        return back()->with('success', 'Bookmarked');
+        try {
+            auth()->user()->bookmarks()->firstOrCreate([
+                'comic_id' => $comic->id
+            ]);
+            
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Bookmarked successfully']);
+            }
+            
+            return back()->with('success', 'Bookmarked successfully');
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json(['error' => 'Failed to bookmark'], 500);
+            }
+            
+            return back()->with('error', 'Failed to bookmark');
+        }
     }
 
     public function destroy(Comic $comic)
     {
-        auth()->user()->bookmarks()->where('comic_id', $comic->id)->delete();
-        return back()->with('success', 'Bookmark removed');
+        try {
+            auth()->user()->bookmarks()
+                ->where('comic_id', $comic->id)
+                ->delete();
+            
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Bookmark removed successfully']);
+            }
+            
+            return back()->with('success', 'Bookmark removed successfully');
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json(['error' => 'Failed to remove bookmark'], 500);
+            }
+            
+            return back()->with('error', 'Failed to remove bookmark');
+        }
     }
 }
 

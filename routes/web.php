@@ -26,7 +26,9 @@ Route::resource('comics', ComicController::class);
 Route::get('comics/{comic}/chapters/{chapter}', [ChapterController::class, 'show'])->name('chapters.show');
 Route::middleware('auth')->group(function () {
     Route::resource('chapters', ChapterController::class)->only(['create', 'store', 'destroy']);
-    Route::resource('bookmarks', BookmarkController::class)->only(['index', 'store', 'destroy']);
+    Route::get('bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
+    Route::post('comics/{comic}/bookmark', [BookmarkController::class, 'store'])->name('bookmarks.store');
+    Route::delete('comics/{comic}/bookmark', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
     Route::post('comics/{comic}/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::post('comics/{comic}/rating', [RatingController::class, 'store'])->name('ratings.store');

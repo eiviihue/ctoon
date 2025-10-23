@@ -12,7 +12,17 @@ class CommentController extends Controller
     {
         $data = $request->validated();
         $data['user_id'] = auth()->id();
-        $comic->comments()->create($data);
+        $comment = $comic->comments()->create($data);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => 'Comment posted',
+                'body' => $comment->body,
+                'user_name' => $comment->user->name,
+                'created_at' => $comment->created_at->toDateTimeString()
+            ]);
+        }
+
         return back()->with('success', 'Comment posted');
     }
 
