@@ -8,7 +8,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/css/rating.css', 'resources/js/app.js'])
+    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+        @vite(['resources/css/app.css', 'resources/css/rating.css', 'resources/js/app.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/rating.css') }}">
+        <script src="{{ asset('js/app.js') }}" defer></script>
+    @endif
 </head>
 <body>
     <header class="site-header bg-white dark:bg-gray-900/60 sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 backdrop-blur">
