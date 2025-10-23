@@ -132,9 +132,14 @@
             <h6>Comments ({{ $chapter->comments()->count() }})</h6>
             <div id="commentsList" class="mb-3">
               @foreach($chapter->comments()->with('user')->latest()->get() as $c)
-                <div class="mb-2">
-                  <div class="small text-muted">{{ $c->user->name }} · {{ $c->created_at->diffForHumans() }}</div>
-                  <div>{{ $c->body }}</div>
+                <div class="mb-3 pb-2 border-bottom">
+                  <div class="small text-muted d-flex justify-content-between align-items-start mb-1">
+                    <span>
+                      {{ $c->user->name }} · {{ $c->created_at->diffForHumans() }}
+                      <span class="badge bg-secondary ms-2">Ch. {{ $chapter->number }}</span>
+                    </span>
+                  </div>
+                  <div class="text-break">{{ $c->body }}</div>
                 </div>
               @endforeach
             </div>
@@ -226,6 +231,10 @@
             });
 
             document.addEventListener('keydown', function(e){
+              // Don't trigger navigation if focused on form elements
+              if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+                return;
+              }
               if (e.key === 'ArrowRight' || e.key === ' ') nextPage();
               else if (e.key === 'ArrowLeft') prevPage();
             });
@@ -291,17 +300,60 @@
             rateForm.addEventListener('submit', async function(e){
               e.preventDefault();
               const formData = new FormData(rateForm);
-              try{
-                const res = await fetch(rateForm.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }, body: formData });
-                if (!res.ok) throw new Error('Network');
+              try {
+                const res = await fetch(rateForm.action, { 
+                  method: 'POST', 
+                  headers: { 
+                    'X-CSRF-TOKEN': csrfToken, 
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                  }, 
+                  body: formData 
+                });
+                
+                if (!res.ok) {
+                  const errorData = await res.json();
+                  throw new Error(errorData.message || 'Failed to save rating');
+                }
+                
                 const json = await res.json();
-                if (avgEl && json.average !== undefined) avgEl.textContent = json.average;
-                if (countEl && json.totalRatings !== undefined) countEl.textContent = json.totalRatings + ' ratings';
-                // keep panel open, disable form
+                if (avgEl && json.average !== undefined) {
+                  avgEl.textContent = parseFloat(json.average).toFixed(1);
+                }
+                if (countEl && json.totalRatings !== undefined) {
+                  countEl.textContent = json.totalRatings + ' ratings';
+                }
+                
                 rateFormWrap.style.display = 'none';
                 openRate.disabled = false;
-                alert('Rating saved');
-              }catch(err){ console.error(err); alert('Failed to save rating'); }
+                
+                const toast = document.createElement('div');
+                toast.className = 'position-fixed top-0 end-0 p-3 mt-5';
+                toast.style.zIndex = '9999';
+                toast.innerHTML = `
+                  <div class="toast show bg-success text-white" role="alert">
+                    <div class="toast-body">
+                      Rating saved successfully
+                    </div>
+                  </div>
+                `;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+              } catch(err) {
+                console.error(err);
+                const errorToast = document.createElement('div');
+                errorToast.className = 'position-fixed top-0 end-0 p-3 mt-5';
+                errorToast.style.zIndex = '9999';
+                errorToast.innerHTML = `
+                  <div class="toast show bg-danger text-white" role="alert">
+                    <div class="toast-body">
+                      ${err.message}
+                    </div>
+                  </div>
+                `;
+                document.body.appendChild(errorToast);
+                setTimeout(() => errorToast.remove(), 3000);
+              }
             });
           }
 
@@ -314,7 +366,17 @@
                 const res = await fetch(commentForm.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }, body: fd });
                 if (!res.ok) throw new Error('Network');
                 const json = await res.json();
-                const tpl = document.createElement('div'); tpl.className = 'mb-2'; tpl.innerHTML = `<div class="small text-muted">${json.user_name} · just now</div><div>${json.body}</div>`;
+                const tpl = document.createElement('div'); 
+                tpl.className = 'mb-3 pb-2 border-bottom'; 
+                tpl.innerHTML = `
+                  <div class="small text-muted d-flex justify-content-between align-items-start mb-1">
+                    <span>
+                      ${json.user_name} · just now
+                      <span class="badge bg-secondary ms-2">Ch. ${json.chapter_number}</span>
+                    </span>
+                  </div>
+                  <div class="text-break">${json.body}</div>
+                `;
                 commentsList && commentsList.prepend(tpl);
                 commentForm.querySelector('textarea') && (commentForm.querySelector('textarea').value = '');
               }catch(err){ console.error(err); alert('Failed to post comment'); }

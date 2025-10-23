@@ -19,7 +19,8 @@ class CommentController extends Controller
                 'message' => 'Comment posted',
                 'body' => $comment->body,
                 'user_name' => $comment->user->name,
-                'created_at' => $comment->created_at->toDateTimeString()
+                'created_at' => $comment->created_at->toDateTimeString(),
+                'chapter_number' => $comment->chapter->number ?? null
             ]);
         }
 
