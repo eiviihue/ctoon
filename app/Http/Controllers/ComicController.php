@@ -33,7 +33,15 @@ class ComicController extends Controller
     {
         $data = $request->validated();
         if ($request->hasFile('cover')) {
-            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+            $file = $request->file('cover');
+            $extension = $file->getClientOriginalExtension();
+            $filename = 'cover.' . $extension;
+            $slug = \Illuminate\Support\Str::slug($data['title']);
+            $data['cover_path'] = Storage::disk('azure')->putFileAs(
+                "images/covers/{$slug}",
+                $file,
+                $filename
+            );
         }
         Comic::create($data);
         return redirect()->route('comics.index')->with('success', 'Comic added');
@@ -55,9 +63,18 @@ class ComicController extends Controller
     {
         $data = $request->validated();
         if ($request->hasFile('cover')) {
-            if ($comic->cover_path)
-                Storage::disk('public')->delete($comic->cover_path);
-            $data['cover_path'] = $request->file('cover')->store('covers', 'public');
+            if ($comic->cover_path) {
+                Storage::disk('azure')->delete($comic->cover_path);
+            }
+            $file = $request->file('cover');
+            $extension = $file->getClientOriginalExtension();
+            $filename = 'cover.' . $extension;
+            $slug = \Illuminate\Support\Str::slug($data['title']);
+            $data['cover_path'] = Storage::disk('azure')->putFileAs(
+                "images/covers/{$slug}",
+                $file,
+                $filename
+            );
         }
         $comic->update($data);
         return redirect()->route('comics.show', $comic)->with('success', 'Comic updated');

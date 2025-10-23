@@ -59,7 +59,7 @@ class MigrateToAzure extends Command
             $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
 
             // Build the destination path (new Azure path)
-            $destinationPath = "comics/{$comic->slug}/chapter-{$chapter->number}/page-{$page->page_number}.{$extension}";
+            $destinationPath = "comics/{$comic->slug}/chapter{$chapter->number}/page{$page->page_number}.{$extension}";
 
             $this->info("Migrating: {$sourcePath} -> {$destinationPath}");
 

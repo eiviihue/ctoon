@@ -12,6 +12,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\FixAzurePaths::class,
         \App\Console\Commands\ImportLocalComics::class,
         \App\Console\Commands\ImportCovers::class,
+        \App\Console\Commands\AzCopyMigrate::class,
+        \App\Console\Commands\SyncFromAzureStorage::class,
     ];
 
     protected function schedule(\Illuminate\Console\Scheduling\Schedule $schedule): void
