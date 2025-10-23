@@ -22,10 +22,31 @@ class SyncFromAzureStorage extends Command
         $isDryRun = $this->option('dry-run');
         $disk = Storage::disk('azure');
 
+        // Clear existing data if not a dry run
+        if (!$isDryRun) {
+            if ($this->confirm('This will delete all existing data. Are you sure you want to continue?')) {
+                $this->info('Clearing existing data...');
+                \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+                Page::truncate();
+                Chapter::truncate();
+                Comic::truncate();
+                Genre::truncate();
+                \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+                $this->info('Data cleared successfully.');
+            } else {
+                $this->info('Operation cancelled.');
+                return 1;
+            }
+        }
+
         if (!$disk->exists('comics')) {
             $this->error("No 'comics' directory found in Azure storage");
             return 1;
         }
+
+        // Get Azure storage URL base
+        $azureUrl = rtrim(config('filesystems.disks.azure.url'), '/');
+        $containerName = config('filesystems.disks.azure.container');
 
         // List all directories in comics/
         $comicDirs = collect($disk->directories('comics'));
@@ -59,20 +80,50 @@ class SyncFromAzureStorage extends Command
                 $this->info("Found existing comic: {$title}");
             }
 
-            // Check for cover
-            $coverPath = "images/covers/{$comicSlug}/cover";
+            // Check for cover in several possible locations and file names
+            $possibleDirs = [
+                "covers/{$comicSlug}",
+                "images/covers/{$comicSlug}",
+                "comics/{$comicSlug}",
+            ];
             $possibleExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
             $coverFound = false;
 
-            foreach ($possibleExtensions as $ext) {
-                if ($disk->exists("{$coverPath}.{$ext}")) {
-                    $fullCoverPath = "{$coverPath}.{$ext}";
-                    if (!$isDryRun && $comic->cover_path !== $fullCoverPath) {
-                        $comic->update(['cover_path' => $fullCoverPath]);
+            // First try explicit cover.* filenames in the possible dirs
+            foreach ($possibleDirs as $dir) {
+                foreach ($possibleExtensions as $ext) {
+                    $candidate = "{$dir}/cover.{$ext}";
+                    if ($disk->exists($candidate)) {
+                        $fullCoverPath = $candidate;
+                        if (!$isDryRun && $comic->cover_path !== $fullCoverPath) {
+                            $fullUrl = "{$azureUrl}/{$containerName}/{$fullCoverPath}";
+                            $comic->update(['cover_path' => $fullUrl]);
+                        }
+                        $coverFound = true;
+                        $this->info("Updated cover path: {$fullUrl}");
+                        break 2;
                     }
-                    $coverFound = true;
-                    $this->info("Updated cover path: {$fullCoverPath}");
-                    break;
+                }
+            }
+
+            // If not found, try any image file inside these directories and pick the first match
+            if (!$coverFound) {
+                foreach ($possibleDirs as $dir) {
+                    if (!$disk->exists($dir)) continue;
+                    $files = $disk->files($dir);
+                    foreach ($files as $f) {
+                        $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+                        if (in_array($ext, $possibleExtensions)) {
+                            $fullCoverPath = $f;
+                            $fullUrl = "{$azureUrl}/{$containerName}/{$fullCoverPath}";
+                            if (!$isDryRun && $comic->cover_path !== $fullUrl) {
+                                $comic->update(['cover_path' => $fullUrl]);
+                            }
+                            $coverFound = true;
+                            $this->info("Updated cover path: {$fullUrl}");
+                            break 2;
+                        }
+                    }
                 }
             }
 
@@ -139,18 +190,18 @@ class SyncFromAzureStorage extends Command
                                 'page_number' => $pageNumber
                             ],
                             [
-                                'image_path' => $pagePath
+                                'image_path' => "{$azureUrl}/{$containerName}/comics/{$comicSlug}/chapter{$chapterNumber}/{$pageNumber}.jpg"
                             ]
                         );
 
                         if ($page->wasRecentlyCreated) {
                             $this->info("Created page {$pageNumber}");
-                        } else if ($page->image_path !== $pagePath) {
-                            $page->update(['image_path' => $pagePath]);
+                        } else if ($page->image_path !== "{$azureUrl}/{$containerName}/comics/{$comicSlug}/chapter{$chapterNumber}/{$pageNumber}.jpg") {
+                            $page->update(['image_path' => "{$azureUrl}/{$containerName}/comics/{$comicSlug}/chapter{$chapterNumber}/{$pageNumber}.jpg"]);
                             $this->info("Updated page {$pageNumber} path");
                         }
                     } else {
-                        $this->info("[DRY RUN] Would process page {$pageNumber}: {$pagePath}");
+                        $this->info("[DRY RUN] Would process page {$pageNumber}: {$azureUrl}/{$containerName}/comics/{$comicSlug}/chapter{$chapterNumber}/{$pageNumber}.jpg");
                     }
                 }
             }
