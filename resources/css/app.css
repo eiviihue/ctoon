@@ -321,14 +321,21 @@ a:hover {
         flex-direction: column;
         height: 100%;
         overflow: hidden;
+        background: var(--card-background);
+        border-radius: 0.75rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .comic-card img {
         width: 100%;
-        aspect-ratio: 2/3;
+        aspect-ratio: 3/4;
         object-fit: cover;
-        border-radius: 0.5rem;
         transition: transform 0.3s ease;
+    }
+
+    .comic-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
 
     .comic-card:hover img {
@@ -389,5 +396,32 @@ a:hover {
     .nav-link.active {
         background-color: var(--primary-color);
         color: white;
+    }
+
+    /* Header brand */
+    .brand {
+        font-family: var(--font-heading);
+        background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-size: 1.25rem;
+    }
+
+    /* Button shorthand */
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 600;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--secondary-color);
     }
 }

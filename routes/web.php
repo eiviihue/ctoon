@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::post('comics/{comic}/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::post('comics/{comic}/rating', [RatingController::class, 'store'])->name('ratings.store');
+    Route::get('comics/{comic}/rating', [RatingController::class, 'getAverageRating'])->name('ratings.average');
     Route::get('profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('profile', [ProfileController::class, 'update'])->name('profile.update');
 });

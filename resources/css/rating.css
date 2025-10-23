@@ -1,0 +1,48 @@
+.rating-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+}
+
+.stars {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.star {
+    cursor: pointer;
+    color: #d1d5db;
+    transition: color 0.2s ease;
+}
+
+.star.active {
+    color: #fbbf24;
+}
+
+.star:hover {
+    transform: scale(1.1);
+}
+
+.rating-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.rating-stats .divider {
+    color: #9ca3af;
+}
+
+.average-rating {
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.total-ratings {
+    color: #6b7280;
+}
