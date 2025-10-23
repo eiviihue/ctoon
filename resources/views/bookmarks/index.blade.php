@@ -9,10 +9,10 @@
             @foreach($bookmarks as $bookmark)
                 <div class="col">
                     <div class="card h-100">
-                        <a href="{{ route('comics.show', $bookmark->comic) }}" class="text-decoration-none">
-                            @if($bookmark->comic->cover_path)
-                                <img src="{{ $bookmark->comic->cover_url }}" 
-                                     alt="{{ $bookmark->comic->title }}"
+                        <a href="{{ route('comics.show', $bookmark) }}" class="text-decoration-none">
+                            @if($bookmark->cover_path)
+                                <img src="{{ $bookmark->cover_url }}" 
+                                     alt="{{ $bookmark->title }}"
                                      class="card-img-top"
                                      style="height: 300px; object-fit: cover;"
                                      loading="lazy">
@@ -24,16 +24,16 @@
                         </a>
                         <div class="card-body">
                             <h5 class="card-title">
-                                <a href="{{ route('comics.show', $bookmark->comic) }}" class="text-dark text-decoration-none">
-                                    {{ $bookmark->comic->title }}
+                                <a href="{{ route('comics.show', $bookmark) }}" class="text-dark text-decoration-none">
+                                    {{ $bookmark->title }}
                                 </a>
                             </h5>
                             <p class="card-text">
                                 <span class="badge bg-secondary">
-                                    {{ $bookmark->comic->genre->name ?? 'Uncategorized' }}
+                                    {{ $bookmark->genre->name ?? 'Uncategorized' }}
                                 </span>
                             </p>
-                            <form action="{{ route('bookmarks.destroy', $bookmark->comic) }}" method="POST">
+                            <form action="{{ route('bookmarks.destroy', $bookmark) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-danger w-100">
                                     <i class="fas fa-bookmark me-2"></i>
