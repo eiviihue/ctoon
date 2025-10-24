@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AZURE_RESOURCE_GROUP: ctoon
+      AZURE_WEBAPP_NAME: CToon
       APP_ENV: production
       APP_DEBUG: false
       DB_CONNECTION: mysql
@@ -65,7 +66,11 @@ jobs:
           package: .
 
       - name: Set web root to public
-        run: az webapp config appsettings set -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AZURE_WEBAPP_NAME }} --settings WEBSITE_WEBROOT=/home/site/wwwroot/public
+        run: az webapp config appsettings set \
+          -g ${{ env.AZURE_RESOURCE_GROUP }} \
+          -n ${{ env.AZURE_WEBAPP_NAME }} \
+          --settings WEBSITE_WEBROOT=/home/site/wwwroot/public
+
       # Run database sync after deployment
       - name: Sync Azure Storage to Database
         run: php artisan az:sync-from-storage
