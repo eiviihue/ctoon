@@ -41,6 +41,14 @@ jobs:
           composer config --global process-timeout 600
           composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
+      - name: Create .env file
+        run: |
+          echo "APP_NAME=CToon" > .env
+          echo "APP_ENV=production" >> .env
+          echo "APP_KEY=" >> .env
+          echo "APP_DEBUG=false" >> .env
+          echo "APP_URL=${{ secrets.APP_URL }}" >> .env
+
       - name: Generate key
         run: php artisan key:generate
 
