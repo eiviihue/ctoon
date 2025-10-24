@@ -37,9 +37,8 @@ jobs:
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, iconv, json, mbstring, pdo
 
       - name: Install Dependencies
-        run:
+        run: |
           composer config --global process-timeout 600 && composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
           npm install
           npm run build
 
