@@ -36,13 +36,9 @@ jobs:
           php-version: "8.4"
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, iconv, json, mbstring, pdo
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-
       - name: Install Dependencies
-        run: |
+        run:
+          composer config --global process-timeout 600 && composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
           composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
           npm install
           npm run build
