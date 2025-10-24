@@ -36,6 +36,7 @@ jobs:
           php-version: "8.4"
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, iconv, json, mbstring, pdo
 
+
       - name: Install Dependencies
         run: |
           composer config --global process-timeout 600
@@ -62,6 +63,8 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
 
+      - name: Set web root to public
+        run: az webapp config appsettings set -g ctoon -n ${{ env.AZURE_WEBAPP_NAME }} --settings WEBSITE_WEBROOT=/home/site/wwwroot/public
       # Run database sync after deployment
       - name: Sync Azure Storage to Database
         run: php artisan az:sync-from-storage
