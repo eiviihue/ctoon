@@ -16,6 +16,8 @@ php artisan storage:link
 # Database migrations
 php artisan migrate --force
 
+php artisan az:sync-from-storage
+
 # Optimize
 php artisan optimize
 
