@@ -9,11 +9,9 @@
         <div class="card h-100" data-category="{{ $comic->genre->slug ?? 'uncategorized' }}">
           <a href="{{ route('comics.show', $comic) }}" class="text-decoration-none">
             @if($comic->cover_path)
-              <img src="{{ $comic->cover_url }}" 
-                   src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 4'%3E%3C/svg%3E"
-                   alt="{{ $comic->title }}" 
-                   class="card-img-top lazy"
-                   onload="this.classList.add('loaded')">
+              <img src="{{ $comic->cover_url }}"
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 4'%3E%3C/svg%3E"
+                alt="{{ $comic->title }}" class="card-img-top lazy" onload="this.classList.add('loaded')">
             @else
               <div class="card-img-top d-flex align-items-center justify-content-center">
                 <span class="text-muted">No cover</span>
@@ -21,11 +19,15 @@
             @endif
           </a>
           <div class="px-2">
-            <x-rating :comic="$comic" />
+            <div>
+              <strong>Average</strong>
+              <div class="h4 mb-0" id="averageRating">{{ number_format($comic->averageRating(), 1) }}</div>
+              <small class="text-muted" id="ratingCount">{{ $comic->ratings()->count() }} ratings</small>
+            </div>
           </div>
           <div class="card-body">
             <h5 class="card-title">
-              <a href="{{ route('comics.show', $comic) }}" class="text-dark text-decoration-none">{{ $comic->title }}</a>
+              <a href="{{ route('comics.show', $comic) }}" class="fw-bold">{{ $comic->title }}</a>
             </h5>
             <p class="card-text">
               <span class="badge bg-secondary">{{ $comic->genre->name ?? 'Uncategorized' }}</span>

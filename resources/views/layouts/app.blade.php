@@ -37,7 +37,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url('/') }}">CToon</a>
+            <a class="navbar-brand fw-bold" href="{{ url('/') }}" style="color: #0d6efd;">CToon</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -59,21 +59,21 @@
                         </button>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/comics') }}">Comics</a>
+                        <a class="nav-link" href="{{ url('/comics') }}" style="color: #0d6efd;">Comics</a>
                     </li>
                     @auth
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/bookmarks') }}">Bookmarks</a>
+                            <a class="nav-link" href="{{ url('/bookmarks') }}" style="color: #0d6efd;">Bookmarks</a>
                         </li>
                         <li class="nav-item">
                             <form action="{{ route('logout') }}" method="POST" class="d-inline">
                                 @csrf
-                                <button type="submit" class="nav-link btn btn-link">Logout</button>
+                                <button type="submit" class="nav-link btn btn-link" style="color: #0d6efd;">Logout</button>
                             </form>
                         </li>
                     @else
                         <li class="nav-item">
-                            <a class="btn btn-primary ms-2" href="{{ route('login') }}">Login</a>
+                            <a class="btn btn-primary ms-2" href="{{ route('login') }}" style="color: #0d6efd;">Login</a>
                         </li>
                     @endauth
                 </ul>

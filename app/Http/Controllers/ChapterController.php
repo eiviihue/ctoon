@@ -44,14 +44,21 @@ class ChapterController extends Controller
             }
         }
 
-        return redirect()->route('comics.show', $comic)->with('success', 'Chapter uploaded');
+        return redirect()->route('chapters.show', [$comic, $chapter])->with('success', 'Chapter uploaded');
     }
 
     public function show(Comic $comic, Chapter $chapter)
     {
-        $chapter->load('pages');
-        return view('chapters.show', compact('comic', 'chapter'));
+        // Load related models (pages + user of each comment)
+        $chapter->load('pages', 'comments.user');
+
+        // Fetch comments, newest first
+        $comments = $chapter->comments()->latest()->get();
+
+        // Return view with all data
+        return view('chapters.show', compact('comic', 'chapter', 'comments'));
     }
+
 
     public function destroy(Comic $comic, Chapter $chapter)
     {

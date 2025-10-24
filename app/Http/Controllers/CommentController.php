@@ -12,6 +12,11 @@ class CommentController extends Controller
     {
         $data = $request->validated();
         $data['user_id'] = auth()->id();
+
+        if (empty($data['chapter_id'])) {
+            $data['chapter_id'] = null;
+        }
+
         $comment = $comic->comments()->create($data);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -21,6 +26,14 @@ class CommentController extends Controller
                 'user_name' => $comment->user->name,
                 'created_at' => $comment->created_at->toDateTimeString(),
                 'chapter_number' => $comment->chapter->number ?? null
+            ]);
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'user_name' => $comment->user->name,
+                'chapter_number' => $comment->chapter->number,
+                'body' => e($comment->body),
             ]);
         }
 

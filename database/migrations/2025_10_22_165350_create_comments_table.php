@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use phpDocumentor\Reflection\Types\Nullable;
 
 return new class extends Migration
 {
@@ -16,7 +17,7 @@ return new class extends Migration
         $table->foreignId('user_id')->constrained()->onDelete('cascade');
         $table->foreignId('comic_id')->constrained()->onDelete('cascade');
         $table->foreignId('chapter_id')->nullable()->constrained()->onDelete('cascade');
-        $table->text('body');
+        $table->string('body', 500);
         $table->timestamps();
     });
 }

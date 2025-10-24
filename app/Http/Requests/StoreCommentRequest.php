@@ -22,7 +22,10 @@ class StoreCommentRequest extends FormRequest
      */
     public function rules()
     {
-        return ['body' => 'required|string|max:2000'];
+        return [
+            'body' => 'required|string|max:2000', 
+            'chapter_id' => 'nullable|exists:chapters,id',
+        ];
     }
 
 }
