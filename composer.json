@@ -13,6 +13,7 @@
         "azure-oss/storage-blob-flysystem": "^1.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "league/flysystem-azure-blob-storage": "^3.30",
         "microsoft/azure-storage-blob": "^1.5"
     },
     "require-dev": {
