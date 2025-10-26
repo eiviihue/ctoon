@@ -59,14 +59,21 @@ jobs:
         run: chmod -R 777 storage bootstrap/cache
 
       - name: Deploy to Azure
+        uses: azure/login@v1
+        with:
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+
+      - name: Ensure App Service app settings (document root + post-deploy script)
+        run: |
+          az webapp config appsettings set \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --settings WEBSITE_WEBROOT=/home/site/wwwroot/public \
+                       POST_DEPLOYMENT_SCRIPT="php artisan storage:link; php artisan migrate --force; php artisan az:sync-from-storage"
+
+      - name: Deploy to Azure
         uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
-
-      - name: Set web root to public
-        run: az webapp config appsettings set --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_WEBAPP_NAME }} --settings WEBSITE_WEBROOT=/home/site/wwwroot/public
-      # Run database sync after deployment
-      - name: Sync Azure Storage to Database
-        run: php artisan az:sync-from-storage

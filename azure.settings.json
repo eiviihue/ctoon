@@ -1,6 +1,6 @@
 [{
   "name": "PHP_VERSION",
-  "value": "8.2"
+  "value": "8.4"
 },
 {
   "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
@@ -9,4 +9,8 @@
 {
   "name": "POST_DEPLOYMENT_SCRIPT",
   "value": "php artisan storage:link; php artisan migrate --force"
+},
+{
+  "name": "WEBSITE_DOCUMENT_ROOT",
+  "value": "/home/site/wwwroot/public"
 }]

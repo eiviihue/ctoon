@@ -53,65 +53,28 @@ class Comic extends Model
         if (empty($this->cover_path)) {
             return null;
         }
+        // First try configured filesystem disk URL (works if azure disk driver is configured)
         $preferredDisk = config('filesystems.default', env('FILESYSTEM_DISK', 'local'));
-        if (!empty(env('AZURE_STORAGE_ACCOUNT')) && array_key_exists('azure', config('filesystems.disks', []))) {
-            $disk = 'azure';
-        } else {
-            $disk = $preferredDisk;
-        }
-
-        // Preferred: use filesystem disk helper (this will work for Azure disk driver)
         try {
-            $filesystem = Storage::disk($disk);
+            $filesystem = Storage::disk($preferredDisk);
             if (method_exists($filesystem, 'url')) {
                 return $filesystem->url($this->cover_path);
             }
         } catch (\Exception $e) {
-            // ignore and continue to fallbacks
+            // ignore and fall back to building Azure public URL
         }
 
-        // If a full blob endpoint with SAS is provided in env, use it (format: https://.../container?sv=...)
-        $blobEndpoint = env('AZURE_STORAGE_BLOB_ENDPOINT');
-        if (!empty($blobEndpoint)) {
-            $parts = explode('?', $blobEndpoint, 2);
-            $base = rtrim($parts[0], '/');
-            $query = isset($parts[1]) ? $parts[1] : null;
-            $url = $base . '/' . ltrim($this->cover_path, '/');
-            if ($query) $url .= '?' . $query;
-            return $url;
-        }
-
-        // Build URL from standard AZURE env variables if available
-        $storageAccount = env('AZURE_STORAGE_ACCOUNT') ?: env('AZURE_STORAGE_NAME');
-        $container = env('AZURE_STORAGE_CONTAINER', env('AZURE_STORAGE_CONTAINER_NAME', null));
+        // If Azure storage account name + container are available, build public URL (assumes anonymous blobs)
+        $storageAccount = env('AZURE_STORAGE_NAME') ?: env('AZURE_STORAGE_ACCOUNT');
+        $container = env('AZURE_STORAGE_CONTAINER') ?: env('AZURE_STORAGE_CONTAINER_NAME');
         if (!empty($storageAccount) && !empty($container)) {
-            // Normalize path to use covers/{slug}/{filename}
             $path = ltrim($this->cover_path, '/');
-            // If stored path has images/covers/ prefix, convert to covers/
-            if (str_starts_with($path, 'images/covers/')) {
-                $path = substr($path, strlen('images/'));
-            }
-            // If stored path starts with 'covers/' that's fine. Otherwise if it contains '/covers/' use the suffix.
-            if (!str_starts_with($path, 'covers/')) {
-                // try to find covers/ in the path
-                $pos = strpos($path, '/covers/');
-                if ($pos !== false) {
-                    $path = substr($path, $pos + 1);
-                }
-            }
-
             $baseUrl = "https://{$storageAccount}.blob.core.windows.net/{$container}/" . $path;
-            $sas = env('AZURE_STORAGE_SAS_TOKEN');
-            if (!empty($sas)) {
-                // ensure token doesn't start with ?
-                $sas = ltrim($sas, '?');
-                return $baseUrl . '?' . $sas;
-            }
             return $baseUrl;
         }
 
-        // Try disk config url
-        $diskConfig = config('filesystems.disks.' . $disk, []);
+        // Try disk config url as a fallback
+        $diskConfig = config('filesystems.disks.' . $preferredDisk, []);
         if (!empty($diskConfig['url'])) {
             return rtrim($diskConfig['url'], '/') . '/' . ltrim($this->cover_path, '/');
         }

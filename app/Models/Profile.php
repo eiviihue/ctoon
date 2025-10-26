@@ -24,11 +24,20 @@ class Profile extends Model
         } catch (\Exception $e) {
             // ignore
         }
+
+        // Build Azure public URL if storage info is present
+        $storageAccount = env('AZURE_STORAGE_NAME') ?: env('AZURE_STORAGE_ACCOUNT');
+        $container = env('AZURE_STORAGE_CONTAINER') ?: env('AZURE_STORAGE_CONTAINER_NAME');
+        if (!empty($storageAccount) && !empty($container)) {
+            $path = ltrim($this->avatar_path, '/');
+            return "https://{$storageAccount}.blob.core.windows.net/{$container}/" . $path;
+        }
+
         $diskConfig = config('filesystems.disks.' . $disk, []);
         if (!empty($diskConfig['url'])) {
             return rtrim($diskConfig['url'], '/') . '/' . ltrim($this->avatar_path, '/');
         }
-        return asset('storage/' . $this->avatar_path);
+        return asset('storage/' . ltrim($this->avatar_path, '/'));
     }
 }
 
