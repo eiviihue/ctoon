@@ -1,10 +1,14 @@
-# Copy nginx default configuration
-cp /home/site/wwwroot/default /etc/nginx/sites-enabled/default
+# Set up nginx configuration
+mkdir -p /etc/nginx/conf.d
+cp /home/site/wwwroot/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy PHP configuration if exists
 if [ -f "/home/php.ini" ]; then
     cp /home/php.ini /usr/local/etc/php/conf.d/php.ini
 fi
+
+# Verify nginx configuration
+nginx -t || echo "Nginx configuration test failed"
 
 # Wait for nginx to be available
 timeout=300
