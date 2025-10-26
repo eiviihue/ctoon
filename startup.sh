@@ -6,6 +6,12 @@ mkdir -p /etc/nginx/conf.d
 cp /home/site/wwwroot/nginx.main.conf /etc/nginx/nginx.conf
 cp /home/site/wwwroot/nginx.conf /etc/nginx/conf.d/default.conf
 
+# Set proper permissions for Laravel
+chown -R www-data:www-data /home/site/wwwroot
+chmod -R 755 /home/site/wwwroot
+chmod -R 775 /home/site/wwwroot/storage
+chmod -R 775 /home/site/wwwroot/bootstrap/cache
+
 # Copy PHP configuration if exists
 if [ -f "/home/php.ini" ]; then
     cp /home/php.ini /usr/local/etc/php/conf.d/php.ini
