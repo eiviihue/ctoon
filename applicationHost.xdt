@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+  <system.webServer>
+    <runtime xdt:Transform="InsertIfMissing">
+      <environmentVariables>
+        <add name="PATH" value="%PATH%;D:\Program Files\PHP\v8.4" xdt:Transform="InsertIfMissing" xdt:Locator="Match(name)" />
+      </environmentVariables>
+    </runtime>
+  </system.webServer>
+</configuration>
