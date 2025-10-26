@@ -58,22 +58,32 @@ jobs:
       - name: Directory Permissions
         run: chmod -R 777 storage bootstrap/cache
 
-      - name: Azure login (service principal)
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Ensure App Service app settings (document root + post-deploy script)
-        run: |
-          az webapp config appsettings set \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --settings WEBSITE_WEBROOT=/home/site/wwwroot/public \
-                       POST_DEPLOYMENT_SCRIPT="php artisan storage:link; php artisan migrate --force; php artisan az:sync-from-storage"
-
-      - name: Deploy to Azure
+      - name: Deploy to Azure (publish profile)
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
+
+      - name: Remove default static files from wwwroot (hostingstart/index)
+        run: |
+          echo "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}" > publish_profile.xml
+          USER=$(grep -oP 'publishProfile[^>]*publishMethod="MSDeploy"[^>]*userName="\K[^"]+' publish_profile.xml | head -n1)
+          PASS=$(grep -oP 'publishProfile[^>]*publishMethod="MSDeploy"[^>]*userPWD="\K[^"]+' publish_profile.xml | head -n1)
+          SCM_HOST="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
+          echo Deleting hostingstart.html and index.html from $SCM_HOST
+          curl -s -o /dev/null -X DELETE -u "$USER:$PASS" "$SCM_HOST/api/vfs/site/wwwroot/hostingstart.html" || true
+          curl -s -o /dev/null -X DELETE -u "$USER:$PASS" "$SCM_HOST/api/vfs/site/wwwroot/index.html" || true
+
+      - name: Run post-deploy artisan commands via Kudu
+        run: |
+          echo "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}" > publish_profile.xml
+          USER=$(grep -oP 'publishProfile[^>]*publishMethod="MSDeploy"[^>]*userName="\K[^"]+' publish_profile.xml | head -n1)
+          PASS=$(grep -oP 'publishProfile[^>]*publishMethod="MSDeploy"[^>]*userPWD="\K[^"]+' publish_profile.xml | head -n1)
+          SCM_HOST="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
+          echo Running php artisan storage:link
+          curl -s -X POST -u "$USER:$PASS" "$SCM_HOST/api/command" -H "Content-Type: application/json" -d '{"command":"php artisan storage:link"}' || true
+          echo Running php artisan migrate --force
+          curl -s -X POST -u "$USER:$PASS" "$SCM_HOST/api/command" -H "Content-Type: application/json" -d '{"command":"php artisan migrate --force"}' || true
+          echo Running php artisan az:sync-from-storage
+          curl -s -X POST -u "$USER:$PASS" "$SCM_HOST/api/command" -H "Content-Type: application/json" -d '{"command":"php artisan az:sync-from-storage"}' || true
