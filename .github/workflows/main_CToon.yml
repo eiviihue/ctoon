@@ -57,7 +57,7 @@ jobs:
           AZURE_STORAGE_URL: ${{ secrets.AZURE_STORAGE_URL }}
           AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
         run: |
-          cat > .env <<'EOF'
+          cat > .env <<EOF
           APP_NAME=CToon
           APP_ENV=production
           APP_KEY=
