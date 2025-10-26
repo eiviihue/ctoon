@@ -1,6 +1,5 @@
-# Set environment variables for nginx configuration
-export NGINX_CONF_PATH=/home/site/wwwroot/nginx.conf
-export NGINX_DOCUMENT_ROOT=/home/site/wwwroot/public
+# Copy nginx default configuration
+cp /home/site/wwwroot/default /etc/nginx/sites-enabled/default
 
 # Copy PHP configuration if exists
 if [ -f "/home/php.ini" ]; then
