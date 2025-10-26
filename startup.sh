@@ -1,5 +1,9 @@
+# Remove default hosting start page if it exists
+rm -f /home/site/wwwroot/hostingstart.html
+
 # Set up nginx configuration
 mkdir -p /etc/nginx/conf.d
+cp /home/site/wwwroot/nginx.main.conf /etc/nginx/nginx.conf
 cp /home/site/wwwroot/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy PHP configuration if exists
@@ -8,7 +12,10 @@ if [ -f "/home/php.ini" ]; then
 fi
 
 # Verify nginx configuration
-nginx -t || echo "Nginx configuration test failed"
+nginx -t || {
+    echo "Nginx configuration test failed"
+    exit 1
+}
 
 # Wait for nginx to be available
 timeout=300
