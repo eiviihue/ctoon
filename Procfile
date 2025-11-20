@@ -1,1 +1,1 @@
-web: java -Dserver.port=${PORT:-8080} -jar target/ROOT.war
+web: /app/tomcat/bin/catalina.sh run
