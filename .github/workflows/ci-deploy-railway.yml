@@ -1,4 +1,4 @@
-name: CI & Deploy to Railway
+name: CI & Deploy to Railway (diagnostic)
 
 on:
   push:
@@ -14,8 +14,28 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image (Maven builds inside Docker)
+      # Build the builder stage image so we can inspect /app/target
+      - name: Build builder image (diagnostic)
+        run: |
+          docker build --target builder -t ctoon-builder:${{ github.sha }} .
+
+      - name: List builder /app/target contents (diagnostic)
+        run: |
+          echo "--- ls /app/target in builder image ---"
+          docker run --rm ctoon-builder:${{ github.sha }} sh -c "ls -la /app/target || echo 'no target dir'"
+          echo "--- ls /app in builder image ---"
+          docker run --rm ctoon-builder:${{ github.sha }} sh -c "ls -la /app || true"
+
+      # Build the final runtime image
+      - name: Build final image
         run: docker build -t ctoon:${{ github.sha }} .
+
+      - name: List runtime /app/tomcat/webapps (diagnostic)
+        run: |
+          echo "--- ls /app/tomcat/webapps in runtime image ---"
+          docker run --rm ctoon:${{ github.sha }} sh -c "ls -la /app/tomcat/webapps || echo 'no webapps dir'"
+          echo "--- ls /app/target in runtime image ---"
+          docker run --rm ctoon:${{ github.sha }} sh -c "ls -la /app/target || echo 'no target dir'"
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
