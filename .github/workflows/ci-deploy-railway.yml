@@ -11,23 +11,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Cache Maven repository
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
-
-      - name: Build WAR with Maven
-        run: mvn -B clean package -DskipTests
-
-      - name: Build Docker image
+      - name: Build Docker image (Maven builds inside Docker)
         run: docker build -t ctoon:${{ github.sha }} .
 
       - name: Install Railway CLI
