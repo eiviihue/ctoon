@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ctoon-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ctoon
+      MYSQL_USER: ctoon_user
+      MYSQL_PASSWORD: ctoon_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - ctoon-network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ctoon-web
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ctoon
+      DB_USERNAME: ctoon_user
+      DB_PASSWORD: ctoon_password
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    networks:
+      - ctoon-network
+
+volumes:
+  mysql_data:
+
+networks:
+  ctoon-network:
+    driver: bridge

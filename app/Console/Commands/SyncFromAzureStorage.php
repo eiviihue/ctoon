@@ -21,7 +21,8 @@ class SyncFromAzureStorage extends Command
     public function handle()
     {
         $isDryRun = $this->option('dry-run');
-        $disk = Storage::disk('azure');
+        // Use the application's default disk (usually `public`) instead of Azure-specific disk
+        $disk = Storage::disk(config('filesystems.default', 'public'));
 
         if (!$disk->exists('comics')) {
             $this->error("No 'comics' directory found in Azure storage");
@@ -79,7 +80,7 @@ class SyncFromAzureStorage extends Command
                                             'path' => $coverPath,
                                             'filename' => $filename,
                                             'size' => null,
-                                            'disk' => config('filesystems.default', 'azure'),
+                                            'disk' => config('filesystems.default', 'public'),
                                             'is_primary' => true,
                                             'updated_at' => Carbon::now(),
                                         ]

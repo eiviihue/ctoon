@@ -37,7 +37,7 @@ class ComicController extends Controller
             $extension = $file->getClientOriginalExtension();
             $filename = 'cover.' . $extension;
             $slug = \Illuminate\Support\Str::slug($data['title']);
-            $data['cover_path'] = Storage::disk('azure')->putFileAs(
+            $data['cover_path'] = Storage::disk(config('filesystems.default', 'public'))->putFileAs(
                 "images/covers/{$slug}",
                 $file,
                 $filename
@@ -64,13 +64,13 @@ class ComicController extends Controller
         $data = $request->validated();
         if ($request->hasFile('cover')) {
             if ($comic->cover_path) {
-                Storage::disk('azure')->delete($comic->cover_path);
+                Storage::disk(config('filesystems.default', 'public'))->delete($comic->cover_path);
             }
             $file = $request->file('cover');
             $extension = $file->getClientOriginalExtension();
             $filename = 'cover.' . $extension;
             $slug = \Illuminate\Support\Str::slug($data['title']);
-            $data['cover_path'] = Storage::disk('azure')->putFileAs(
+            $data['cover_path'] = Storage::disk(config('filesystems.default', 'public'))->putFileAs(
                 "images/covers/{$slug}",
                 $file,
                 $filename

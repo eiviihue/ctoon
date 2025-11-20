@@ -1,9 +1,2 @@
-const { app } = require('@azure/functions');
-
-app.storageBlob('storageBlobTrigger1', {
-    path: 'mycontainer',
-    connection: 'eae75d_STORAGE',
-    handler: (blob, context) => {
-        context.log(`Storage blob function processed blob "${context.triggerMetadata.name}" with size ${blob.length} bytes`);
-    }
-});
+// Azure Functions storage blob trigger removed for Railway deployment.
+// This file is intentionally left as a disabled placeholder.

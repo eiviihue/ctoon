@@ -24,17 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Storage::extend('azure', function ($app, $config) {
-            $client = BlobRestProxy::createBlobService(sprintf(
-                'DefaultEndpointsProtocol=https;AccountName=%s;AccountKey=%s;EndpointSuffix=core.windows.net',
-                $config['name'],
-                $config['key']
-            ));
-
-            $adapter = new AzureBlobStorageAdapter($client, $config['container']);
-            $flysystem = new Flysystem($adapter);
-
-            return new IlluminateFilesystemAdapter($flysystem, $adapter, $config);
-        });
+        // Azure storage adapter registration removed.
+        // Uses the framework's default disk (usually `public`) for Railway deployments.
     }
 }

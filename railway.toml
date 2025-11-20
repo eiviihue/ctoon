@@ -1,0 +1,16 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "java -Dserver.port=${PORT} -jar target/ROOT.war"
+
+[[services]]
+name = "web"
+image = "ctoon-app:latest"
+port = 8080
+
+[[services]]
+name = "mysql"
+image = "mysql:8.0"
+port = 3306

@@ -12,110 +12,59 @@ jobs:
       AZURE_RESOURCE_GROUP: ctoon
       AZURE_WEBAPP_NAME: ctoon
       APP_ENV: production
-      APP_DEBUG: false
       DB_CONNECTION: mysql
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
       DB_DATABASE: ${{ secrets.DB_DATABASE }}
       DB_USERNAME: ${{ secrets.DB_USERNAME }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      MYSQL_ATTR_SSL_CA: ${{ secrets.DB_SSL_CA_PATH }}
-      SESSION_DRIVER: database
-      QUEUE_CONNECTION: database
-      FILESYSTEM_DISK: azure
       AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
       AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
       AZURE_STORAGE_CONTAINER: ${{ secrets.AZURE_STORAGE_CONTAINER }}
-      AZURE_STORAGE_URL: ${{ secrets.AZURE_STORAGE_URL }}
-      AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          php-version: "8.4"
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, iconv, json, mbstring, pdo
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
-
-      - name: Install Dependencies
-        run: |
-          composer config --global process-timeout 600
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-
-      - name: Create .env file (echo secrets)
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
-          AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
-          AZURE_STORAGE_CONTAINER: ${{ secrets.AZURE_STORAGE_CONTAINER }}
-          AZURE_STORAGE_URL: ${{ secrets.AZURE_STORAGE_URL }}
-          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
-        run: |
-          cat > .env <<EOF
-          APP_NAME=CToon
-          APP_ENV=production
-          APP_KEY=
-          APP_DEBUG=false
-          APP_URL=https://ctoon.azurewebsites.net
-
-          DB_CONNECTION=mysql
-          DB_HOST=${DB_HOST}
-          DB_PORT=${DB_PORT}
-          DB_DATABASE=${DB_DATABASE}
-          DB_USERNAME=${DB_USERNAME}
-          DB_PASSWORD=${DB_PASSWORD}
-          # path to SSL CA on the App Service
-          MYSQL_ATTR_SSL_CA=/home/site/wwwroot/storage/certs/DigiCertGlobalRootG2.crt.pem
-
-          SESSION_DRIVER=database
-          QUEUE_CONNECTION=database
-          FILESYSTEM_DISK=azure
-
-          AZURE_STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT}
-          AZURE_STORAGE_KEY=${AZURE_STORAGE_KEY}
-          AZURE_STORAGE_CONTAINER=${AZURE_STORAGE_CONTAINER}
-          AZURE_STORAGE_URL=${AZURE_STORAGE_URL}
-          AZURE_STORAGE_SAS_TOKEN=${AZURE_STORAGE_SAS_TOKEN}
-          EOF
-
-      - name: Generate key
-        run: php artisan key:generate
-
-      - name: Directory Permissions
-        run: chmod -R 777 storage bootstrap/cache
+      - name: Build with Maven
+        run: mvn clean package -B -DskipTests
 
       - name: Deploy to Azure (publish profile)
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
+          package: target/ROOT.war
 
-      - name: Remove default static files from wwwroot (hostingstart/index)
+      - name: Configure Azure App Service Settings
         run: |
           echo "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}" > publish_profile.xml
           USER=$(grep -oP 'publishProfile[^>]*publishMethod="MSDeploy"[^>]*userName="\K[^"]+' publish_profile.xml | head -n1)
           PASS=$(grep -oP 'publishProfile[^>]*publishMethod="MSDeploy"[^>]*userPWD="\K[^"]+' publish_profile.xml | head -n1)
           SCM_HOST="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
-          echo Deleting hostingstart.html and index.html from $SCM_HOST
-          curl -s -o /dev/null -X DELETE -u "$USER:$PASS" "$SCM_HOST/api/vfs/site/wwwroot/hostingstart.html" || true
-          curl -s -o /dev/null -X DELETE -u "$USER:$PASS" "$SCM_HOST/api/vfs/site/wwwroot/index.html" || true
+          
+          # Set application settings
+          echo "Setting application configuration..."
+          curl -s -X POST -u "$USER:$PASS" "$SCM_HOST/api/settings" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "JAVA_OPTS": "-Dfile.encoding=UTF-8",
+              "DB_HOST": "'${{ secrets.DB_HOST }}'",
+              "DB_PORT": "'${{ secrets.DB_PORT }}'",
+              "DB_DATABASE": "'${{ secrets.DB_DATABASE }}'",
+              "DB_USERNAME": "'${{ secrets.DB_USERNAME }}'",
+              "AZURE_STORAGE_ACCOUNT": "'${{ secrets.AZURE_STORAGE_ACCOUNT }}'",
+              "AZURE_STORAGE_KEY": "'${{ secrets.AZURE_STORAGE_KEY }}'",
+              "AZURE_STORAGE_CONTAINER": "'${{ secrets.AZURE_STORAGE_CONTAINER }}'"
+            }' || true
 
-      - name: Run post-deploy artisan commands via Kudu
+      - name: Verify Deployment
         run: |
-          echo "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}" > publish_profile.xml
-          USER=$(grep -oP 'publishProfile[^>]*publishMethod="MSDeploy"[^>]*userName="\K[^"]+' publish_profile.xml | head -n1)
-          PASS=$(grep -oP 'publishProfile[^>]*publishMethod="MSDeploy"[^>]*userPWD="\K[^"]+' publish_profile.xml | head -n1)
-          SCM_HOST="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
-          echo Running php artisan storage:link
-          curl -s -X POST -u "$USER:$PASS" "$SCM_HOST/api/command" -H "Content-Type: application/json" -d '{"command":"php artisan storage:link"}' || true
-          echo Running php artisan migrate --force
-          curl -s -X POST -u "$USER:$PASS" "$SCM_HOST/api/command" -H "Content-Type: application/json" -d '{"command":"php artisan migrate --force"}' || true
-          echo Running php artisan az:sync-from-storage
-          curl -s -X POST -u "$USER:$PASS" "$SCM_HOST/api/command" -H "Content-Type: application/json" -d '{"command":"php artisan az:sync-from-storage"}' || true
+          echo "Deployment completed successfully!"
+          echo "Application URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"

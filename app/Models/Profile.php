@@ -15,28 +15,16 @@ class Profile extends Model
     public function getAvatarUrlAttribute()
     {
         if (empty($this->avatar_path)) return null;
-        $disk = config('filesystems.default', env('FILESYSTEM_DISK', 'local'));
+        $disk = config('filesystems.default', env('FILESYSTEM_DISK', 'public'));
         try {
             $filesystem = Storage::disk($disk);
             if (method_exists($filesystem, 'url')) {
                 return $filesystem->url($this->avatar_path);
             }
         } catch (\Exception $e) {
-            // ignore
+            // fall back gracefully
         }
 
-        // Build Azure public URL if storage info is present
-        $storageAccount = env('AZURE_STORAGE_NAME') ?: env('AZURE_STORAGE_ACCOUNT');
-        $container = env('AZURE_STORAGE_CONTAINER') ?: env('AZURE_STORAGE_CONTAINER_NAME');
-        if (!empty($storageAccount) && !empty($container)) {
-            $path = ltrim($this->avatar_path, '/');
-            return "https://{$storageAccount}.blob.core.windows.net/{$container}/" . $path;
-        }
-
-        $diskConfig = config('filesystems.disks.' . $disk, []);
-        if (!empty($diskConfig['url'])) {
-            return rtrim($diskConfig['url'], '/') . '/' . ltrim($this->avatar_path, '/');
-        }
         return asset('storage/' . ltrim($this->avatar_path, '/'));
     }
 }

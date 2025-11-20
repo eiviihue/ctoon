@@ -53,33 +53,16 @@ class Comic extends Model
         if (empty($this->cover_path)) {
             return null;
         }
-        // First try configured filesystem disk URL (works if azure disk driver is configured)
-        $preferredDisk = config('filesystems.default', env('FILESYSTEM_DISK', 'local'));
+        $disk = config('filesystems.default', env('FILESYSTEM_DISK', 'public'));
         try {
-            $filesystem = Storage::disk($preferredDisk);
+            $filesystem = Storage::disk($disk);
             if (method_exists($filesystem, 'url')) {
                 return $filesystem->url($this->cover_path);
             }
         } catch (\Exception $e) {
-            // ignore and fall back to building Azure public URL
+            // fall back
         }
 
-        // If Azure storage account name + container are available, build public URL (assumes anonymous blobs)
-        $storageAccount = env('AZURE_STORAGE_NAME') ?: env('AZURE_STORAGE_ACCOUNT');
-        $container = env('AZURE_STORAGE_CONTAINER') ?: env('AZURE_STORAGE_CONTAINER_NAME');
-        if (!empty($storageAccount) && !empty($container)) {
-            $path = ltrim($this->cover_path, '/');
-            $baseUrl = "https://{$storageAccount}.blob.core.windows.net/{$container}/" . $path;
-            return $baseUrl;
-        }
-
-        // Try disk config url as a fallback
-        $diskConfig = config('filesystems.disks.' . $preferredDisk, []);
-        if (!empty($diskConfig['url'])) {
-            return rtrim($diskConfig['url'], '/') . '/' . ltrim($this->cover_path, '/');
-        }
-
-        // Final fallback - local storage
         return asset('storage/' . ltrim($this->cover_path, '/'));
     }
 }
